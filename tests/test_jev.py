@@ -3,7 +3,9 @@
 import json
 import os
 import tempfile
+import threading
 import unittest
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from io import BytesIO
 from unittest.mock import Mock
@@ -255,6 +257,133 @@ class JevOpenRouterRouteTest(JevTypeSafeRouteTest):
 
     def test_preset(self):
         self.assertEqual((self.config.url, self.config.model), (self.URL, self.MODEL))
+
+
+
+class JevCustomServerTest(unittest.TestCase):
+    """Any System One server by base URL, under the same guard as the OpenAI-compatible backend."""
+
+    def setUp(self):
+        self.scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(self.scratch.cleanup)
+        self.key_path = Path(self.scratch.name) / "key"
+        self.key_path.write_text("synthetic-key")
+        os.chmod(self.key_path, 0o600)
+        self.key = {"SOC_THIEF_JEV_KEY_FILE": str(self.key_path)}
+
+    @staticmethod
+    def config(**env):
+        return triage_from_environment({"SOC_THIEF_MODEL_BACKEND": "jev", **env})._config
+
+    def test_loopback_http_needs_no_key(self):
+        config = self.config(SOC_THIEF_JEV_BASE_URL="http://127.0.0.1:8080/v1/", SOC_THIEF_JEV_MODEL="local-jev")
+        self.assertEqual((config.endpoint, config.url, config.model, config.key_file),
+                         ("custom", "http://127.0.0.1:8080/v1/systemone", "local-jev", None))
+        opener = Mock()
+        opener.open.return_value = v1_with()
+        adapter = JevTriage(config, opener, sleep=lambda _: None)
+        adapter.prepare([GROUP])
+        review = adapter.review(GROUP)
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, "http://127.0.0.1:8080/v1/systemone")
+        self.assertIsNone(request.get_header("Authorization"))
+        self.assertEqual(json.loads(request.data)["model"], "local-jev")
+        self.assertEqual(json.loads(request.data)["questions"]["suspicious"]["type"], "noul")
+        self.assertNotIn("LabNode", request.data.decode())
+        self.assertEqual((review.attention_probability, review.model_version), (0.87, "local-jev"))
+        self.assertTrue(decide(GROUP, review.result).delivery_required)
+
+    def test_loopback_with_key_sends_it(self):
+        config = self.config(**self.key, SOC_THIEF_JEV_BASE_URL="http://[::1]:9000", SOC_THIEF_JEV_MODEL="jev")
+        opener = Mock()
+        opener.open.return_value = v1_with()
+        adapter = JevTriage(config, opener, sleep=lambda _: None)
+        adapter.prepare([GROUP])
+        adapter.review(GROUP)
+        self.assertEqual(opener.open.call_args.args[0].get_header("Authorization"), "Bearer synthetic-key")
+        self.assertNotIn("synthetic-key", repr(config))
+
+    def test_remote_needs_https_and_opt_in(self):
+        remote = {**self.key, "SOC_THIEF_JEV_MODEL": "jev"}
+        config = self.config(**remote, SOC_THIEF_JEV_BASE_URL="https://jev.example.invalid/api",
+                             SOC_THIEF_JEV_ALLOW_REMOTE="1")
+        self.assertEqual(config.url, "https://jev.example.invalid/api/systemone")
+        for env in ({"SOC_THIEF_JEV_BASE_URL": "https://jev.example.invalid/api"},
+                    {"SOC_THIEF_JEV_BASE_URL": "https://jev.example.invalid/api", "SOC_THIEF_JEV_ALLOW_REMOTE": "0"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://jev.example.invalid/api", "SOC_THIEF_JEV_ALLOW_REMOTE": "1"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://192.0.2.10:8080", "SOC_THIEF_JEV_ALLOW_REMOTE": "1"},
+                    {"SOC_THIEF_JEV_BASE_URL": "https://jev.example.invalid", "SOC_THIEF_JEV_ALLOW_REMOTE": "yes"}):
+            with self.subTest(env=env), self.assertRaises(ModelError):
+                self.config(**remote, **env)
+
+    def test_localhost_is_remote(self):
+        for env in ({"SOC_THIEF_JEV_BASE_URL": "http://localhost:8080"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://localhost:8080", "SOC_THIEF_JEV_ALLOW_REMOTE": "1"},
+                    {"SOC_THIEF_JEV_BASE_URL": "https://localhost:8080"}):
+            with self.subTest(env=env), self.assertRaises(ModelError):
+                self.config(**self.key, SOC_THIEF_JEV_MODEL="jev", **env)
+        # Accepted only as a remote: https, acknowledged, and with a key.
+        self.config(**self.key, SOC_THIEF_JEV_MODEL="jev", SOC_THIEF_JEV_BASE_URL="https://localhost:8080",
+                    SOC_THIEF_JEV_ALLOW_REMOTE="1")
+        with self.assertRaises(ModelError):
+            self.config(SOC_THIEF_JEV_MODEL="jev", SOC_THIEF_JEV_BASE_URL="https://localhost:8080",
+                        SOC_THIEF_JEV_ALLOW_REMOTE="1")
+
+    def test_custom_route_needs_model_and_no_preset(self):
+        for env in ({"SOC_THIEF_JEV_BASE_URL": "http://127.0.0.1:8080"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://127.0.0.1:8080", "SOC_THIEF_JEV_MODEL": "jev",
+                     "SOC_THIEF_JEV_ENDPOINT": "typesafe"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://user:pw@127.0.0.1:8080", "SOC_THIEF_JEV_MODEL": "jev"},
+                    {"SOC_THIEF_JEV_BASE_URL": "http://127.0.0.1:8080/?x=1", "SOC_THIEF_JEV_MODEL": "jev"},
+                    {"SOC_THIEF_JEV_ENDPOINT": "custom", "SOC_THIEF_JEV_MODEL": "jev"}):
+            with self.subTest(env=env), self.assertRaises(ModelError):
+                self.config(**self.key, **env)
+
+    def test_presets_count_as_the_remote_opt_in_and_still_need_a_key(self):
+        for endpoint, url in (("", "https://api.typesafe.ai/v1/systemone"),
+                              ("openrouter", "https://openrouter.ai/api/v1/systemone")):
+            config = self.config(**self.key, SOC_THIEF_JEV_ENDPOINT=endpoint, SOC_THIEF_JEV_ALLOW_REMOTE="0")
+            self.assertEqual(config.url, url)
+            with self.assertRaises(ModelError):
+                self.config(SOC_THIEF_JEV_ENDPOINT=endpoint)
+
+    def test_redirect_refused(self):
+        hits = []
+
+        class Redirect(BaseHTTPRequestHandler):
+            def do_POST(self):
+                hits.append(self.path)
+                self.rfile.read(int(self.headers["Content-Length"]))
+                self.send_response(302 if self.path.endswith("/systemone") else 200)
+                self.send_header("Location", "/elsewhere")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+
+            def do_GET(self):  # Where a followed redirect would land: a valid answer.
+                hits.append(self.path)
+                body = json.dumps(V1_OK).encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Redirect)
+        self.addCleanup(server.server_close)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(thread.join)
+        self.addCleanup(server.shutdown)
+        config = self.config(SOC_THIEF_JEV_BASE_URL=f"http://127.0.0.1:{server.server_port}",
+                             SOC_THIEF_JEV_MODEL="jev")
+        adapter = JevTriage(config, sleep=lambda _: None)
+        adapter.prepare([GROUP])
+        with self.assertRaises(ModelError) as caught:
+            adapter.review(GROUP)
+        self.assertEqual(str(caught.exception), "Jev review failed")
+        self.assertEqual(hits, ["/systemone"])
 
 
 if __name__ == "__main__":

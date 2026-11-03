@@ -17,7 +17,7 @@ are shown.
 | --- | --- | --- |
 | Local Ollama (default, `qwen3:4b`) | Stays on the host, over loopback | The default and the most tested |
 | OpenAI-compatible chat API | Loopback by default; a remote endpoint only if you opt in | Being added for the first release |
-| Jev (TypeSafe), hosted | Leaves the host, pseudonymised | Experimental, opt-in, never run as the live default |
+| Jev over the System One API | A hosted preset leaves the host, pseudonymised; a local server stays on loopback | Experimental, opt-in, never run as the live default |
 
 ### The privacy trade-off
 
@@ -151,8 +151,11 @@ unit's timeout and runs on every breach page, so it is left on its local model.
 
 ## Jev (experimental)
 
-TypeSafe's Jev is a hosted model that returns typed judgements and
-probabilities rather than chat text. Soc Thief can ask it two things about each group:
+TypeSafe's Jev is a model that returns typed judgements and probabilities rather than chat text.
+It is served over TypeSafe's [System One API](https://docs.typesafe.ai/api/system-one). System One
+is a protocol, not one service. TypeSafe and OpenRouter host it, and other providers and local
+servers implement it too. Soc Thief works with any System One-compatible server. Soc Thief can
+ask it two things about each group:
 
 - an attention score: the probability that the group warrants an analyst's attention;
 - a threat tag from a fixed list: `routine`, `possible_auth_abuse`, `possible_malware`,
@@ -174,8 +177,8 @@ closed for that group with a health failure.
 
 ### Turning it on
 
-Bring your own key. Soc Thief can reach Jev by three routes. Pick one with
-`SOC_THIEF_JEV_ENDPOINT` in `/etc/soc-thief/environment`:
+Pick a route in `/etc/soc-thief/environment`. Use a preset, or give the base URL of any
+System One server.
 
 | `SOC_THIEF_JEV_ENDPOINT` | Where requests go | Key | Default model |
 | --- | --- | --- | --- |
@@ -183,22 +186,39 @@ Bring your own key. Soc Thief can reach Jev by three routes. Pick one with
 | `openrouter` | OpenRouter, `openrouter.ai` | OpenRouter | `typesafe/jev-1.13` |
 | `vercel` | The older Vercel AI Gateway route | Vercel AI Gateway | `typesafe-ai/jev` |
 
-The `typesafe` and `openrouter` routes speak the same API, TypeSafe's
-[System One API](https://docs.typesafe.ai/api/system-one), and Soc Thief handles both the same
-way. In the owner's testing, the OpenRouter route was refused for rate limits far less often
-than the Vercel route. `vercel` is kept for deployments that already use it. Set
-`SOC_THIEF_JEV_MODEL` to pin a different model; TypeSafe's docs list the model names.
+The `typesafe` and `openrouter` presets fill in a base URL and a default model. Soc Thief handles
+them like any other System One server. In the owner's testing, OpenRouter was refused for rate
+limits far less often than Vercel. `vercel` uses an older request shape and is kept for
+deployments that already use it. Set `SOC_THIEF_JEV_MODEL` to pin a different model.
 
-1. Save the key in a root-owned `0600` file, `/etc/soc-thief/secrets/jev_key`.
+For any other System One server, leave `SOC_THIEF_JEV_ENDPOINT` empty and set:
+
+| Setting | Value |
+| --- | --- |
+| `SOC_THIEF_JEV_BASE_URL` | The API base. Soc Thief calls it with `/systemone` added, for example `http://127.0.0.1:8080/v1` becomes `http://127.0.0.1:8080/v1/systemone` |
+| `SOC_THIEF_JEV_MODEL` | Required. The model name the server expects |
+| `SOC_THIEF_JEV_KEY_FILE` | Path to a file holding the key. Optional for a loopback server only |
+| `SOC_THIEF_JEV_ALLOW_REMOTE` | `1` to allow a server that isn't on this machine |
+
+The URL rules are the same as for the OpenAI-compatible backend. Plain `http` is only allowed to a
+loopback IP address such as `127.0.0.1`. Anything else needs `https` and
+`SOC_THIEF_JEV_ALLOW_REMOTE=1`. `localhost` counts as remote. Setting both a preset and a base URL
+is refused. Choosing a hosted preset is itself your decision that data leaves the host, so the
+presets do not need `SOC_THIEF_JEV_ALLOW_REMOTE`.
+
+1. Save the key in a root-owned `0600` file, `/etc/soc-thief/secrets/jev_key`. The drop-in always
+   loads it. A local server without keys accepts any placeholder value.
 2. Install the drop-in `deploy/systemd/soc-thief-runner-jev-trial.conf` as
    `/etc/systemd/system/soc-thief-runner.service.d/jev-trial.conf`. It loads the key as a
-   credential and turns Jev on for the daily runner. It passes `SOC_THIEF_JEV_ENDPOINT` and
-   `SOC_THIEF_JEV_MODEL` through from the environment file.
-3. Allow HTTPS egress to the chosen route's host for the service account.
-   `python -m soc_thief.jev_egress --endpoint <route> --source <your nft policy file> --output <new file>`
-   writes a proposed policy with one narrowly scoped HTTPS rule inserted before the drop rule.
-   `--endpoint` defaults to `typesafe`. It never applies anything; review it and load it
-   yourself. The policy file itself is described in [DEPLOYMENT.md](DEPLOYMENT.md).
+   credential and turns Jev on for the daily runner. It passes the settings above through from the
+   environment file. The container can reach only one host loopback port for a model,
+   `SOC_THIEF_MODEL_PORT`, so a local System One server must listen there.
+3. For a remote server, allow HTTPS egress to its host for the service account.
+   `python -m soc_thief.jev_egress --endpoint <preset> --source <your nft policy file> --output <new file>`,
+   or `--base-url <url>` in place of `--endpoint`, writes a proposed policy with one narrowly
+   scoped rule inserted before the drop rule. It never applies anything; review it and load it
+   yourself. A loopback server needs no rule. The policy file itself is described in
+   [DEPLOYMENT.md](DEPLOYMENT.md).
 4. `systemctl daemon-reload`.
 
 Remove the drop-in and reload to switch back to the local model.
@@ -209,8 +229,8 @@ wrong place and every Jev review will fail closed.
 
 What Jev receives: capped group summaries only. Before any request, host and manager names for the
 whole window are replaced with tokens such as `host-01`, and IP addresses, URLs and secret-looking
-values are masked. The three routes are fixed in the code. Alert data cannot change the route or
-the model. A deadline and a repeated-failure cut-off leave the runner time to finish its report
+values are masked. Only the operator's settings choose the route. Alert data cannot change the
+route or the model. A deadline and a repeated-failure cut-off leave the runner time to finish its report
 if Jev is slow or down. Any HTTP error, redirect, timeout or malformed answer fails closed for
 that group. The error body is never logged.
 

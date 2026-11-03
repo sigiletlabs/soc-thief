@@ -7,7 +7,7 @@ from ipaddress import IPv4Address
 from pathlib import Path
 from unittest.mock import patch
 
-from soc_thief.jev_egress import JevEgressError, propose, write_proposal
+from soc_thief.jev_egress import JevEgressError, main, propose, target, write_proposal
 
 
 POLICY = ('table inet soc_thief_egress {\n'
@@ -60,6 +60,29 @@ class JevEgressTests(unittest.TestCase):
                     self.assertEqual(lookup.call_args.args[0], host)
                 with self.assertRaises(JevEgressError):
                     write_proposal(source, Path(root) / 'bad', 'https://evil.invalid')
+
+    def test_custom_base_url_follows_its_host_and_port(self):
+        self.assertEqual(target(base_url='https://jev.example.invalid/api'), ('jev.example.invalid', 443))
+        self.assertEqual(target(base_url='https://jev.example.invalid:8443'), ('jev.example.invalid', 8443))
+        self.assertIsNone(target(base_url='http://127.0.0.1:8080'))
+        for bad in ('http://jev.example.invalid', 'http://localhost:8080', 'https://u:p@jev.example.invalid'):
+            with self.subTest(bad=bad), self.assertRaises(JevEgressError):
+                target(base_url=bad)
+        with tempfile.TemporaryDirectory() as root:
+            source = Path(root) / 'policy'
+            source.write_text(POLICY)
+            with patch('soc_thief.jev_egress.socket.getaddrinfo', return_value=[
+                (2, 1, 6, '', (PUBLIC_TEST_ADDRESS, 8443))]) as lookup:
+                write_proposal(source, Path(root) / 'custom', base_url='https://jev.example.invalid:8443')
+            self.assertEqual(lookup.call_args.args[:2], ('jev.example.invalid', 8443))
+            self.assertIn('tcp dport 8443 accept', (Path(root) / 'custom').read_text())
+            # A loopback server needs no rule: nothing is resolved or written.
+            with patch('soc_thief.jev_egress.socket.getaddrinfo') as lookup, \
+                    patch('builtins.print'):
+                self.assertEqual(main(['--source', str(source), '--output', str(Path(root) / 'local'),
+                                       '--base-url', 'http://127.0.0.1:8080']), 0)
+            lookup.assert_not_called()
+            self.assertFalse((Path(root) / 'local').exists())
 
 
 if __name__ == '__main__':

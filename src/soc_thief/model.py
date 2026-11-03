@@ -183,6 +183,27 @@ def _loopback_literal(host: str | None) -> bool:
         return False
 
 
+def _base_url_ok(base_url: object, allow_remote: object) -> bool:
+    """The one URL guard for every configurable model backend.
+
+    Plain http only to a loopback IP literal. Anything else (any host name, any other address)
+    needs https and ``allow_remote is True``. ``localhost`` counts as remote: a name can resolve
+    anywhere. No credentials, query, fragment, escapes or whitespace in the URL.
+    """
+    try:
+        parsed = urlsplit(base_url)  # type: ignore[arg-type]
+        loopback = _loopback_literal(parsed.hostname)
+        return (type(base_url) is str and len(base_url) <= 512
+                and parsed.scheme in ("http", "https") and bool(parsed.hostname)
+                and parsed.port != 0 and parsed.username is None and parsed.password is None
+                and not parsed.query and not parsed.fragment and not base_url.endswith("?")
+                and not any(c.isspace() or ord(c) < 32 for c in base_url)
+                and "\\" not in base_url and "%" not in parsed.netloc
+                and (loopback or (allow_remote is True and parsed.scheme == "https")))
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
 @dataclass(frozen=True)
 class OpenAIConfig:
     """An OpenAI-compatible chat-completions endpoint: Ollama, LM Studio, llama.cpp, vLLM,
@@ -201,19 +222,7 @@ class OpenAIConfig:
     allow_remote: bool = False
 
     def __post_init__(self) -> None:
-        try:
-            parsed = urlsplit(self.base_url)
-            loopback = _loopback_literal(parsed.hostname)
-            valid = (type(self.base_url) is str and len(self.base_url) <= 512
-                     and parsed.scheme in ("http", "https") and bool(parsed.hostname)
-                     and parsed.port != 0 and parsed.username is None and parsed.password is None
-                     and not parsed.query and not parsed.fragment and not self.base_url.endswith("?")
-                     and not any(c.isspace() or ord(c) < 32 for c in self.base_url)
-                     and "\\" not in self.base_url and "%" not in parsed.netloc
-                     and (loopback or (self.allow_remote is True and parsed.scheme == "https")))
-        except (ValueError, TypeError, AttributeError):
-            valid = False
-        if not valid:
+        if not _base_url_ok(self.base_url, self.allow_remote):
             raise ValueError("model endpoint must be loopback, or https with remote use acknowledged")
         if (type(self.model_name) is not str or not 0 < len(self.model_name) <= _MODEL_LIMIT
                 or any(ord(c) < 32 or c.isspace() for c in self.model_name)):
@@ -347,7 +356,8 @@ def triage_from_environment(env: Mapping[str, str] | None = None) -> Any:
     """The configured model backend. Default: the local Ollama endpoint, as before.
 
     ``SOC_THIEF_MODEL_BACKEND`` is ``ollama`` (default), ``openai`` or ``jev``. The older
-    ``SOC_THIEF_JEV_TRIAL=1`` still selects Jev. Jev's route is ``SOC_THIEF_JEV_ENDPOINT``.
+    ``SOC_THIEF_JEV_TRIAL=1`` still selects Jev. Jev's route is a preset in
+    ``SOC_THIEF_JEV_ENDPOINT`` or any System One server in ``SOC_THIEF_JEV_BASE_URL``.
     """
     env = os.environ if env is None else env
     backend = env.get(OPENAI_ENV["backend"], "ollama") or "ollama"
@@ -360,12 +370,14 @@ def triage_from_environment(env: Mapping[str, str] | None = None) -> Any:
     raise ModelError("model backend is invalid")
 
 
-# The Jev trial is opt-in. The route is one of three fixed presets, chosen by the operator; alert
-# data cannot change it. Scores are display-only and never enter policy.decide as suppression
-# authority. "typesafe" and "openrouter" both speak TypeSafe's System One API
-# (https://docs.typesafe.ai/api/system-one) at base + "/systemone", with the same request and
-# response handling; "vercel" is the older Vercel AI Gateway route, kept for compatibility.
-# Each preset maps to (URL, default model, speaks System One).
+# The Jev backend is opt-in. The route is chosen by the operator; alert data cannot change it.
+# Scores are display-only and never enter policy.decide as suppression authority. System One
+# (https://docs.typesafe.ai/api/system-one) is a protocol: any server that implements it is called
+# at base URL + "/systemone" with the same request and response handling. "typesafe" and
+# "openrouter" are presets that fill in a hosted base URL and default model; choosing one is the
+# operator's acknowledgement that data leaves the host. A custom base URL goes through the same
+# guard as the OpenAI-compatible backend. "vercel" is the older Vercel AI Gateway route, kept for
+# compatibility. Each preset maps to (URL, default model, speaks System One).
 _SYSTEM_ONE_BASES = {"typesafe": ("https://api.typesafe.ai/v1", "jev-latest"),
                      "openrouter": ("https://openrouter.ai/api/v1", "typesafe/jev-1.13")}
 _JEV_ROUTES = {
@@ -373,6 +385,10 @@ _JEV_ROUTES = {
     "vercel": ("https://ai-gateway.vercel.sh/v4/ai/evaluation-model", "typesafe-ai/jev", False),
 }
 _JEV_DEFAULT_ROUTE = "typesafe"
+_JEV_CUSTOM = "custom"  # The endpoint name of a configured SOC_THIEF_JEV_BASE_URL.
+JEV_ENV = {"key_file": "SOC_THIEF_JEV_KEY_FILE", "endpoint": "SOC_THIEF_JEV_ENDPOINT",
+           "base_url": "SOC_THIEF_JEV_BASE_URL", "model": "SOC_THIEF_JEV_MODEL",
+           "allow_remote": "SOC_THIEF_JEV_ALLOW_REMOTE"}
 _JEV_MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}")
 # The questions in the Vercel gateway's shape. The System One shape differs only in the yes/no type
 # name ("noul" there, "boolean" here); the choice criteria are the same name-to-description map.
@@ -410,37 +426,71 @@ def _unit_interval(value: object) -> bool:
 
 @dataclass(frozen=True)
 class JevConfig:
-    """Only the key's file path is held; the key itself is read per request."""
+    """Only the key's file path is held; the key itself is read per request.
 
-    key_file: str
+    Either a preset ``endpoint`` (empty means ``typesafe``) or a ``base_url`` for any System One
+    server, never both. A base URL must pass the shared guard: http only to a loopback IP literal,
+    anything else https with ``allow_remote``. It needs an explicit model. Only a loopback server
+    may run without a key.
+    """
+
+    key_file: str | None
     timeout_seconds: int = 30
-    endpoint: str = _JEV_DEFAULT_ROUTE
-    model: str = ""  # Empty means the route's default model.
+    endpoint: str = ""
+    model: str = ""  # Empty means the preset's default model.
+    base_url: str = field(default="", repr=False)
+    allow_remote: bool = False
 
     def __post_init__(self) -> None:
-        if type(self.endpoint) is not str or self.endpoint not in _JEV_ROUTES:
+        if type(self.endpoint) is not str or type(self.base_url) is not str or type(self.model) is not str:
             raise ValueError("Jev configuration is invalid")
-        if self.model == "":
-            object.__setattr__(self, "model", _JEV_ROUTES[self.endpoint][1])
-        if (type(self.key_file) is not str or not self.key_file.startswith("/")
+        if self.base_url:
+            if (self.endpoint not in ("", _JEV_CUSTOM) or not self.model
+                    or not _base_url_ok(self.base_url, self.allow_remote)):
+                raise ValueError("Jev configuration is invalid")
+            object.__setattr__(self, "endpoint", _JEV_CUSTOM)
+            keyless = _loopback_literal(urlsplit(self.base_url).hostname)
+        else:
+            if self.endpoint == "":
+                object.__setattr__(self, "endpoint", _JEV_DEFAULT_ROUTE)
+            if self.endpoint not in _JEV_ROUTES:
+                raise ValueError("Jev configuration is invalid")
+            if self.model == "":
+                object.__setattr__(self, "model", _JEV_ROUTES[self.endpoint][1])
+            keyless = False
+        if ((self.key_file is None and not keyless)
+                or (self.key_file is not None and (type(self.key_file) is not str or not self.key_file.startswith("/")))
                 or type(self.timeout_seconds) is not int or not 1 <= self.timeout_seconds <= 60
-                or type(self.model) is not str or not _JEV_MODEL_NAME.fullmatch(self.model)):
+                or not _JEV_MODEL_NAME.fullmatch(self.model)):
             raise ValueError("Jev configuration is invalid")
 
     @property
     def url(self) -> str:
+        if self.endpoint == _JEV_CUSTOM:
+            return self.base_url.rstrip("/") + "/systemone"
         return _JEV_ROUTES[self.endpoint][0]
+
+    @property
+    def system_one(self) -> bool:
+        return self.endpoint == _JEV_CUSTOM or _JEV_ROUTES[self.endpoint][2]
 
     @classmethod
     def from_environment(cls, env: Mapping[str, str] | None = None) -> JevConfig:
-        """``SOC_THIEF_JEV_KEY_FILE`` (required), ``SOC_THIEF_JEV_ENDPOINT`` (``typesafe``,
-        ``openrouter`` or ``vercel``; default ``typesafe``) and ``SOC_THIEF_JEV_MODEL``
-        (default per route)."""
+        """``SOC_THIEF_JEV_ENDPOINT`` (``typesafe``, ``openrouter`` or ``vercel``; default
+        ``typesafe``) or ``SOC_THIEF_JEV_BASE_URL`` (any System One server; then
+        ``SOC_THIEF_JEV_MODEL`` is required, and a non-loopback URL needs https and
+        ``SOC_THIEF_JEV_ALLOW_REMOTE=1``). ``SOC_THIEF_JEV_MODEL`` otherwise overrides the
+        preset's default. ``SOC_THIEF_JEV_KEY_FILE`` is required except for a loopback server."""
         env = os.environ if env is None else env
         try:
-            return cls(env["SOC_THIEF_JEV_KEY_FILE"],
-                       endpoint=env.get("SOC_THIEF_JEV_ENDPOINT") or _JEV_DEFAULT_ROUTE,
-                       model=env.get("SOC_THIEF_JEV_MODEL") or "")
+            allow = env.get(JEV_ENV["allow_remote"], "")
+            if allow not in ("", "0", "1"):
+                raise ValueError
+            return cls(env.get(JEV_ENV["key_file"]) or None,
+                       endpoint=env.get(JEV_ENV["endpoint"]) or "",
+                       model=env.get(JEV_ENV["model"]) or "",
+                       base_url=env.get(JEV_ENV["base_url"]) or "",
+                       allow_remote=allow == "1")
         except (KeyError, TypeError, ValueError):
             raise ModelError("Jev configuration is invalid") from None
 
@@ -504,7 +554,7 @@ class JevTriage:
             if any(name in outbound_text for name in self._names if len(name) >= 3 and not name.isdigit()):
                 raise ValueError
             config = self._config
-            system_one = _JEV_ROUTES[config.endpoint][2]  # System One: typesafe or openrouter.
+            system_one = config.system_one  # Every route except the legacy vercel one.
             payload: dict[str, object] = {"state": {"group": summary},
                                           "questions": _JEV_QUESTION_V1 if system_one else _JEV_QUESTION}
             if system_one:
@@ -512,11 +562,13 @@ class JevTriage:
             body = json.dumps(payload, ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode()
             if len(body) > 16 * 1024:
                 raise ValueError
-            key = read_secret(self._config.key_file)
-            if not key or len(key) > 4096:
-                raise ValueError
             headers = {"Content-Type": "application/json", "Accept": "application/json",
-                       "Authorization": "Bearer " + key, "User-Agent": f"SocThief/{__version__}"}
+                       "User-Agent": f"SocThief/{__version__}"}
+            if config.key_file is not None:  # Only a loopback server may go without one.
+                key = read_secret(config.key_file)
+                if not key or len(key) > 4096:
+                    raise ValueError
+                headers["Authorization"] = "Bearer " + key
             if not system_one:
                 headers.update({"ai-gateway-protocol-version": "0.0.1", "ai-gateway-auth-method": "api-key",
                                 "ai-evaluation-model-specification-version": "4",

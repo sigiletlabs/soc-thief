@@ -23,12 +23,18 @@ class DeploymentArtifactsTests(unittest.TestCase):
                                  "--env SOC_THIEF_TUNING_FILE=/run/secrets/tuning "
                                  "--env SOC_THIEF_JEV_TRIAL=1 --env SOC_THIEF_JEV_KEY_FILE=/run/secrets/jev_key "
                                  "--env SOC_THIEF_JEV_ENDPOINT=${SOC_THIEF_JEV_ENDPOINT} "
-                                 "--env SOC_THIEF_JEV_MODEL=${SOC_THIEF_JEV_MODEL} ")
+                                 "--env SOC_THIEF_JEV_BASE_URL=${SOC_THIEF_JEV_BASE_URL} "
+                                 "--env SOC_THIEF_JEV_MODEL=${SOC_THIEF_JEV_MODEL} "
+                                 "--env SOC_THIEF_JEV_ALLOW_REMOTE=${SOC_THIEF_JEV_ALLOW_REMOTE} ")
         body = "".join(line + "\n" for line in override.splitlines() if not line.startswith("#"))
         self.assertEqual(body, "[Service]\n"
                          "LoadCredential=jev_key:/etc/soc-thief/secrets/jev_key\n"
-                         "Environment=SOC_THIEF_JEV_ENDPOINT=typesafe\n"
+                         # Empty route means the typesafe preset unless a base URL is set; the
+                         # environment file alone can acknowledge remote use.
+                         "Environment=SOC_THIEF_JEV_ENDPOINT=\n"
+                         "Environment=SOC_THIEF_JEV_BASE_URL=\n"
                          "Environment=SOC_THIEF_JEV_MODEL=\n"
+                         "Environment=SOC_THIEF_JEV_ALLOW_REMOTE=0\n"
                          "ExecStart=\n" + expected + "\n")
         # The unit's environment file is read after these defaults and overrides them.
         self.assertIn("EnvironmentFile=/etc/soc-thief/environment", base)
