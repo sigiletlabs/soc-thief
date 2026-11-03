@@ -11,7 +11,7 @@ import stat
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from soc_thief.model import _JEV_URL
+from soc_thief.model import _JEV_DEFAULT_ROUTE, _JEV_ROUTES
 
 
 class JevEgressError(RuntimeError):
@@ -60,9 +60,10 @@ def _read_policy(path: Path) -> str:
         raise JevEgressError("Jev egress source is invalid") from None
 
 
-def write_proposal(source: Path, output: Path) -> None:
+def write_proposal(source: Path, output: Path, endpoint: str = _JEV_DEFAULT_ROUTE) -> None:
+    """Resolve the chosen Jev route's host (api.typesafe.ai by default) and propose it."""
     try:
-        origin = urlsplit(_JEV_URL)
+        origin = urlsplit(_JEV_ROUTES[endpoint][0])
         if origin.scheme != "https" or not origin.hostname:
             raise ValueError
         addresses = tuple({entry[4][0] for entry in socket.getaddrinfo(
@@ -75,7 +76,7 @@ def write_proposal(source: Path, output: Path) -> None:
         fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
             stream.write(text)
-    except (OSError, ValueError, socket.gaierror):
+    except (OSError, ValueError, KeyError, TypeError, socket.gaierror):
         raise JevEgressError("Jev egress proposal failed") from None
 
 
@@ -88,9 +89,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = _Parser(description=__doc__)
     parser.add_argument("--source", required=True, help="Current host policy file")
     parser.add_argument("--output", required=True, help="New private proposal path")
+    parser.add_argument("--endpoint", choices=sorted(_JEV_ROUTES), default=_JEV_DEFAULT_ROUTE,
+                        help="Jev route whose host to allow; match SOC_THIEF_JEV_ENDPOINT")
     args = parser.parse_args(argv)
     try:
-        write_proposal(Path(args.source), Path(args.output))
+        write_proposal(Path(args.source), Path(args.output), args.endpoint)
     except JevEgressError:
         print("Jev egress proposal failed; host policy unchanged.")
         return 1

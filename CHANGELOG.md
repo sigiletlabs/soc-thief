@@ -15,7 +15,8 @@ First public release.
   attached file.
 - Fast path that checks for breaches every few minutes and pages through ntfy.
 - Bring your own model: local Ollama or any OpenAI-compatible server, hosted APIs such as
-  OpenRouter, or the experimental Jev backend. Remote models need an explicit opt-in.
+  OpenRouter, or the experimental Jev backend through TypeSafe's own API, OpenRouter or Vercel's
+  AI Gateway. Remote models need an explicit opt-in.
 - `soc-thief-console`: a terminal UI and a local web dashboard.
 - A read-only `soc-thief` CLI for people and AI agents. It follows the AXI conventions and
   prints TOON. A read-only MCP server exposes the same commands as tools.

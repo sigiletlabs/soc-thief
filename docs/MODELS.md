@@ -174,26 +174,45 @@ closed for that group with a health failure.
 
 ### Turning it on
 
-Bring your own key. Soc Thief calls one fixed route, `_JEV_URL` in `src/soc_thief/model.py`
-(Jev through the Vercel AI Gateway), so the key must be one that route accepts.
+Bring your own key. Soc Thief can reach Jev by three routes. Pick one with
+`SOC_THIEF_JEV_ENDPOINT` in `/etc/soc-thief/environment`:
+
+| `SOC_THIEF_JEV_ENDPOINT` | Where requests go | Key | Default model |
+| --- | --- | --- | --- |
+| `typesafe` (default) | TypeSafe's own API, `api.typesafe.ai` | TypeSafe | `jev-latest` |
+| `openrouter` | OpenRouter, `openrouter.ai` | OpenRouter | `typesafe/jev-1.13` |
+| `vercel` | The older Vercel AI Gateway route | Vercel AI Gateway | `typesafe-ai/jev` |
+
+The `typesafe` and `openrouter` routes speak the same API, TypeSafe's
+[System One API](https://docs.typesafe.ai/api/system-one), and Soc Thief handles both the same
+way. In the owner's testing, the OpenRouter route was refused for rate limits far less often
+than the Vercel route. `vercel` is kept for deployments that already use it. Set
+`SOC_THIEF_JEV_MODEL` to pin a different model; TypeSafe's docs list the model names.
 
 1. Save the key in a root-owned `0600` file, `/etc/soc-thief/secrets/jev_key`.
 2. Install the drop-in `deploy/systemd/soc-thief-runner-jev-trial.conf` as
    `/etc/systemd/system/soc-thief-runner.service.d/jev-trial.conf`. It loads the key as a
-   credential and sets `SOC_THIEF_JEV_TRIAL=1` and `SOC_THIEF_JEV_KEY_FILE` for the daily runner.
-3. Allow HTTPS egress to the Jev endpoint for the service account.
-   `python -m soc_thief.jev_egress --source <your nft policy file> --output <new file>` writes a
-   proposed policy with one narrowly scoped HTTPS rule inserted before the drop rule. It never
-   applies anything; review it and load it yourself.
+   credential and turns Jev on for the daily runner. It passes `SOC_THIEF_JEV_ENDPOINT` and
+   `SOC_THIEF_JEV_MODEL` through from the environment file.
+3. Allow HTTPS egress to the chosen route's host for the service account.
+   `python -m soc_thief.jev_egress --endpoint <route> --source <your nft policy file> --output <new file>`
+   writes a proposed policy with one narrowly scoped HTTPS rule inserted before the drop rule.
+   `--endpoint` defaults to `typesafe`. It never applies anything; review it and load it
+   yourself. The policy file itself is described in [DEPLOYMENT.md](DEPLOYMENT.md).
 4. `systemctl daemon-reload`.
 
 Remove the drop-in and reload to switch back to the local model.
 
+If you set up Jev before the `typesafe` route existed, your key is a Vercel key. Add
+`SOC_THIEF_JEV_ENDPOINT=vercel` to the environment file, or the next run will send it to the
+wrong place and every Jev review will fail closed.
+
 What Jev receives: capped group summaries only. Before any request, host and manager names for the
 whole window are replaced with tokens such as `host-01`, and IP addresses, URLs and secret-looking
-values are masked. The endpoint and model ID are fixed in the code and cannot be changed by
-configuration or alert data. A deadline and a repeated-failure cut-off leave the runner time to
-finish its report if Jev is slow or down.
+values are masked. The three routes are fixed in the code. Alert data cannot change the route or
+the model. A deadline and a repeated-failure cut-off leave the runner time to finish its report
+if Jev is slow or down. Any HTTP error, redirect, timeout or malformed answer fails closed for
+that group. The error body is never logged.
 
 `soc_thief.jev_evaluation` and `soc_thief.model_comparison` compare model output against a private
 worksheet of labelled groups, if you want to run your own comparison.

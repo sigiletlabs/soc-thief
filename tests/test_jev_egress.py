@@ -39,13 +39,27 @@ class JevEgressTests(unittest.TestCase):
             source, output = Path(root) / 'policy', Path(root) / 'proposal'
             source.write_text(POLICY)
             with patch('soc_thief.jev_egress.socket.getaddrinfo', return_value=[
-                (2, 1, 6, '', (PUBLIC_TEST_ADDRESS, 443))]):
+                (2, 1, 6, '', (PUBLIC_TEST_ADDRESS, 443))]) as lookup:
                 write_proposal(source, output)
+            self.assertEqual(lookup.call_args.args[0], 'api.typesafe.ai')
             self.assertEqual(source.read_text(), POLICY)
             self.assertIn('Jev trial HTTPS', output.read_text())
             self.assertEqual(os.stat(output).st_mode & 0o777, 0o600)
             with self.assertRaises(JevEgressError):
                 write_proposal(source, output)
+
+    def test_writer_resolves_the_chosen_route(self):
+        with tempfile.TemporaryDirectory() as root:
+            source = Path(root) / 'policy'
+            source.write_text(POLICY)
+            with patch('soc_thief.jev_egress.socket.getaddrinfo', return_value=[
+                (2, 1, 6, '', (PUBLIC_TEST_ADDRESS, 443))]) as lookup:
+                for route, host in (('vercel', 'ai-gateway.vercel.sh'), ('openrouter', 'openrouter.ai'),
+                                    ('typesafe', 'api.typesafe.ai')):
+                    write_proposal(source, Path(root) / route, route)
+                    self.assertEqual(lookup.call_args.args[0], host)
+                with self.assertRaises(JevEgressError):
+                    write_proposal(source, Path(root) / 'bad', 'https://evil.invalid')
 
 
 if __name__ == '__main__':

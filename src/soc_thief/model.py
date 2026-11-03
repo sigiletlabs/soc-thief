@@ -347,7 +347,7 @@ def triage_from_environment(env: Mapping[str, str] | None = None) -> Any:
     """The configured model backend. Default: the local Ollama endpoint, as before.
 
     ``SOC_THIEF_MODEL_BACKEND`` is ``ollama`` (default), ``openai`` or ``jev``. The older
-    ``SOC_THIEF_JEV_TRIAL=1`` still selects Jev.
+    ``SOC_THIEF_JEV_TRIAL=1`` still selects Jev. Jev's route is ``SOC_THIEF_JEV_ENDPOINT``.
     """
     env = os.environ if env is None else env
     backend = env.get(OPENAI_ENV["backend"], "ollama") or "ollama"
@@ -360,10 +360,22 @@ def triage_from_environment(env: Mapping[str, str] | None = None) -> Any:
     raise ModelError("model backend is invalid")
 
 
-# The Jev trial is opt-in. The endpoint and model cannot be changed through alert data or
-# environment. Scores are display-only and never enter policy.decide as suppression authority.
-_JEV_URL = "https://ai-gateway.vercel.sh/v4/ai/evaluation-model"
-_JEV_MODEL = "typesafe-ai/jev"
+# The Jev trial is opt-in. The route is one of three fixed presets, chosen by the operator; alert
+# data cannot change it. Scores are display-only and never enter policy.decide as suppression
+# authority. "typesafe" and "openrouter" both speak TypeSafe's System One API
+# (https://docs.typesafe.ai/api/system-one) at base + "/systemone", with the same request and
+# response handling; "vercel" is the older Vercel AI Gateway route, kept for compatibility.
+# Each preset maps to (URL, default model, speaks System One).
+_SYSTEM_ONE_BASES = {"typesafe": ("https://api.typesafe.ai/v1", "jev-latest"),
+                     "openrouter": ("https://openrouter.ai/api/v1", "typesafe/jev-1.13")}
+_JEV_ROUTES = {
+    **{name: (base + "/systemone", model, True) for name, (base, model) in _SYSTEM_ONE_BASES.items()},
+    "vercel": ("https://ai-gateway.vercel.sh/v4/ai/evaluation-model", "typesafe-ai/jev", False),
+}
+_JEV_DEFAULT_ROUTE = "typesafe"
+_JEV_MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}")
+# The questions in the Vercel gateway's shape. The System One shape differs only in the yes/no type
+# name ("noul" there, "boolean" here); the choice criteria are the same name-to-description map.
 _JEV_QUESTION = {"suspicious": {"type": "boolean", "instructions": (
     "`group` summarises one day of Wazuh alerts that share a rule on one monitored host: "
     "the rule id and its severity level (0-16), the rule description, the decoder, the log "
@@ -387,23 +399,48 @@ _JEV_QUESTION = {"suspicious": {"type": "boolean", "instructions": (
         }}}
 if frozenset(_JEV_QUESTION["threat"]["criteria"]) != JEV_THREAT_LABELS:
     raise RuntimeError("Jev threat vocabulary mismatch")
+_JEV_QUESTION_V1 = {"suspicious": {**_JEV_QUESTION["suspicious"], "type": "noul"},
+                    "threat": _JEV_QUESTION["threat"]}
+
+
+def _unit_interval(value: object) -> bool:
+    # bool is not int here: type() is exact, so True/False are rejected.
+    return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 1
 
 
 @dataclass(frozen=True)
 class JevConfig:
+    """Only the key's file path is held; the key itself is read per request."""
+
     key_file: str
     timeout_seconds: int = 30
+    endpoint: str = _JEV_DEFAULT_ROUTE
+    model: str = ""  # Empty means the route's default model.
 
     def __post_init__(self) -> None:
-        if (type(self.key_file) is not str or not self.key_file.startswith("/")
-                or type(self.timeout_seconds) is not int or not 1 <= self.timeout_seconds <= 60):
+        if type(self.endpoint) is not str or self.endpoint not in _JEV_ROUTES:
             raise ValueError("Jev configuration is invalid")
+        if self.model == "":
+            object.__setattr__(self, "model", _JEV_ROUTES[self.endpoint][1])
+        if (type(self.key_file) is not str or not self.key_file.startswith("/")
+                or type(self.timeout_seconds) is not int or not 1 <= self.timeout_seconds <= 60
+                or type(self.model) is not str or not _JEV_MODEL_NAME.fullmatch(self.model)):
+            raise ValueError("Jev configuration is invalid")
+
+    @property
+    def url(self) -> str:
+        return _JEV_ROUTES[self.endpoint][0]
 
     @classmethod
     def from_environment(cls, env: Mapping[str, str] | None = None) -> JevConfig:
+        """``SOC_THIEF_JEV_KEY_FILE`` (required), ``SOC_THIEF_JEV_ENDPOINT`` (``typesafe``,
+        ``openrouter`` or ``vercel``; default ``typesafe``) and ``SOC_THIEF_JEV_MODEL``
+        (default per route)."""
         env = os.environ if env is None else env
         try:
-            return cls(env["SOC_THIEF_JEV_KEY_FILE"])
+            return cls(env["SOC_THIEF_JEV_KEY_FILE"],
+                       endpoint=env.get("SOC_THIEF_JEV_ENDPOINT") or _JEV_DEFAULT_ROUTE,
+                       model=env.get("SOC_THIEF_JEV_MODEL") or "")
         except (KeyError, TypeError, ValueError):
             raise ModelError("Jev configuration is invalid") from None
 
@@ -466,18 +503,25 @@ class JevTriage:
             outbound_text = json.dumps(summary, ensure_ascii=False).casefold()
             if any(name in outbound_text for name in self._names if len(name) >= 3 and not name.isdigit()):
                 raise ValueError
-            body = json.dumps({"state": {"group": summary}, "questions": _JEV_QUESTION},
-                              ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode()
+            config = self._config
+            system_one = _JEV_ROUTES[config.endpoint][2]  # System One: typesafe or openrouter.
+            payload: dict[str, object] = {"state": {"group": summary},
+                                          "questions": _JEV_QUESTION_V1 if system_one else _JEV_QUESTION}
+            if system_one:
+                payload = {"model": config.model, **payload}
+            body = json.dumps(payload, ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode()
             if len(body) > 16 * 1024:
                 raise ValueError
             key = read_secret(self._config.key_file)
             if not key or len(key) > 4096:
                 raise ValueError
-            request = Request(_JEV_URL, body, {"Content-Type": "application/json",
-                "Accept": "application/json", "Authorization": "Bearer " + key,
-                "ai-gateway-protocol-version": "0.0.1", "ai-gateway-auth-method": "api-key",
-                "ai-evaluation-model-specification-version": "4", "ai-model-id": _JEV_MODEL,
-                "User-Agent": f"SocThief/{__version__}"}, method="POST")
+            headers = {"Content-Type": "application/json", "Accept": "application/json",
+                       "Authorization": "Bearer " + key, "User-Agent": f"SocThief/{__version__}"}
+            if not system_one:
+                headers.update({"ai-gateway-protocol-version": "0.0.1", "ai-gateway-auth-method": "api-key",
+                                "ai-evaluation-model-specification-version": "4",
+                                "ai-model-id": config.model})
+            request = Request(config.url, body, headers, method="POST")
             for attempt in range(3):
                 try:
                     with self._opener.open(request, timeout=self._config.timeout_seconds) as response:
@@ -489,16 +533,30 @@ class JevTriage:
                         raw = response.read(_RESPONSE_LIMIT + 1)
                     if len(raw) > _RESPONSE_LIMIT:
                         raise ValueError
-                    answers = json.loads(raw.decode(), object_pairs_hook=_unique_object,
-                                         parse_constant=_reject_constant)["answers"]
-                    answer, threat = answers["suspicious"], answers["threat"]
-                    probability = answer["probability"]
-                    if (type(answer) is not dict or answer.get("type") != "boolean"
-                            or type(probability) not in (int, float) or not math.isfinite(probability)
-                            or not 0 <= probability <= 1):
+                    document = json.loads(raw.decode(), object_pairs_hook=_unique_object,
+                                          parse_constant=_reject_constant)
+                    if type(document) is not dict:
                         raise ValueError
-                    if (type(threat) is not dict or threat.get("type") != "choice"
-                            or type(threat.get("choice")) is not str
+                    answers = document["answers"]
+                    if type(answers) is not dict or set(answers) != {"suspicious", "threat"}:
+                        raise ValueError
+                    answer, threat = answers["suspicious"], answers["threat"]
+                    if type(answer) is not dict or type(threat) is not dict:
+                        raise ValueError
+                    if system_one:
+                        probability = answer.get("noul")
+                        if answer.get("type") != "noul" or not _unit_interval(probability):
+                            raise ValueError
+                        spread = threat.get("probabilities")
+                        if (not _unit_interval(threat.get("confidence")) or type(spread) is not dict
+                                or not set(spread) <= JEV_THREAT_LABELS
+                                or not all(_unit_interval(value) for value in spread.values())):
+                            raise ValueError
+                    else:
+                        probability = answer.get("probability")
+                        if answer.get("type") != "boolean" or not _unit_interval(probability):
+                            raise ValueError
+                    if (threat.get("type") != "choice" or type(threat.get("choice")) is not str
                             or threat["choice"] not in JEV_THREAT_LABELS):
                         raise ValueError
                     # Policy needs a strict object but cannot suppress on it. Fixed prose is not
@@ -507,7 +565,7 @@ class JevTriage:
                               "rationale": "Uncalibrated attention estimate.",
                               "analyst_action": "Review in the daily digest."}
                     self._failures = 0
-                    return ModelReview(result, _JEV_MODEL, float(probability), threat["choice"])
+                    return ModelReview(result, config.model, float(probability), threat["choice"])
                 except HTTPError as error:
                     if error.code not in (429, 500, 502, 503, 504, 529) or attempt == 2:
                         raise

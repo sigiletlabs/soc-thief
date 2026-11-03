@@ -21,10 +21,17 @@ class DeploymentArtifactsTests(unittest.TestCase):
         start = next(line for line in base.splitlines() if line.startswith("ExecStart="))
         expected = start.replace("--env SOC_THIEF_TUNING_FILE=/run/secrets/tuning ",
                                  "--env SOC_THIEF_TUNING_FILE=/run/secrets/tuning "
-                                 "--env SOC_THIEF_JEV_TRIAL=1 --env SOC_THIEF_JEV_KEY_FILE=/run/secrets/jev_key ")
-        self.assertEqual(override, "[Service]\n"
+                                 "--env SOC_THIEF_JEV_TRIAL=1 --env SOC_THIEF_JEV_KEY_FILE=/run/secrets/jev_key "
+                                 "--env SOC_THIEF_JEV_ENDPOINT=${SOC_THIEF_JEV_ENDPOINT} "
+                                 "--env SOC_THIEF_JEV_MODEL=${SOC_THIEF_JEV_MODEL} ")
+        body = "".join(line + "\n" for line in override.splitlines() if not line.startswith("#"))
+        self.assertEqual(body, "[Service]\n"
                          "LoadCredential=jev_key:/etc/soc-thief/secrets/jev_key\n"
+                         "Environment=SOC_THIEF_JEV_ENDPOINT=typesafe\n"
+                         "Environment=SOC_THIEF_JEV_MODEL=\n"
                          "ExecStart=\n" + expected + "\n")
+        # The unit's environment file is read after these defaults and overrides them.
+        self.assertIn("EnvironmentFile=/etc/soc-thief/environment", base)
         self.assertNotIn("LoadCredential=jev_key:", base)
 
     def test_openai_dropins_change_only_model_selection_credential_and_forwarded_port(self):

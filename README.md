@@ -110,7 +110,7 @@ The model is optional and only advises. Soc Thief works with:
 - [Ollama](https://ollama.com) on the same machine. This is the default, with `qwen3:4b`.
 - Any server that speaks the OpenAI chat API, local or hosted, including LM Studio, llama.cpp,
   vLLM and OpenRouter.
-- Jev from TypeSafe, as an experiment.
+- Jev from TypeSafe, as an experiment, with your own TypeSafe or OpenRouter key.
 
 Keys are read from files, never from flags or plain environment variables. Sending alert
 summaries to a model that isn't on your machine needs an explicit setting. See
