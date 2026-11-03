@@ -100,7 +100,7 @@ A hosted example, using OpenRouter:
 SOC_THIEF_MODEL_BACKEND=openai
 SOC_THIEF_OPENAI_BASE_URL=https://openrouter.ai/api/v1
 SOC_THIEF_OPENAI_MODEL=<a model that supports structured output>
-SOC_THIEF_OPENAI_API_KEY_FILE=/run/secrets/openrouter_key
+SOC_THIEF_OPENAI_API_KEY_FILE=/run/secrets/openai_key
 SOC_THIEF_OPENAI_ALLOW_REMOTE=1
 ```
 - Host egress: a remote endpoint also needs a rule in your host egress policy for that one
@@ -108,6 +108,46 @@ SOC_THIEF_OPENAI_ALLOW_REMOTE=1
 
 The same rules apply as for Ollama: strict JSON answer, one request per group, failures deliver
 with a health failure, and the answer cannot suppress anything.
+
+### In the systemd units
+
+The units use Ollama unless you add a drop-in. Two ship in `deploy/systemd/`:
+
+- `soc-thief-runner-openai.conf`, installed as
+  `/etc/systemd/system/soc-thief-runner.service.d/openai.conf`;
+- `soc-thief-reconcile-openai.conf`, installed as
+  `/etc/systemd/system/soc-thief-reconcile.service.d/openai.conf`.
+
+Install both, so the daily run and the late-alert pass use the same model. Each one selects the
+backend, passes the settings above, loads the key as a credential and changes which host
+loopback port the container can reach. Nothing else changes. Do not combine the runner drop-in
+with the Jev one, because both replace the same command.
+
+1. Save the key in `/etc/soc-thief/secrets/openai_key`, root-owned, mode `0600`. The drop-in
+   always loads it, and the unit fails to start without it. If your server takes no key, write
+   any placeholder such as `none`; it is sent as a bearer token and ignored.
+2. Add the settings to `/etc/soc-thief/environment`. For a server on host loopback:
+
+   ```
+   SOC_THIEF_OPENAI_BASE_URL=http://127.0.0.1:1234/v1
+   SOC_THIEF_OPENAI_MODEL=qwen3-4b
+   SOC_THIEF_OPENAI_PORT=1234
+   ```
+
+   `SOC_THIEF_OPENAI_PORT` is the port forwarded into the container, in place of
+   `SOC_THIEF_MODEL_PORT`. It must match the port in the base URL. For a remote endpoint, use an
+   `https` base URL, add `SOC_THIEF_OPENAI_ALLOW_REMOTE=1`, and set `SOC_THIEF_OPENAI_PORT` to the
+   same value as `SOC_THIEF_MODEL_PORT`. Nothing uses that port then; it only keeps the container's
+   loopback access the same as before. `SOC_THIEF_OPENAI_TIMEOUT_SECONDS` is optional.
+3. A remote endpoint also needs an HTTPS rule for that one destination in your egress policy, see
+   [DEPLOYMENT.md](DEPLOYMENT.md#egress-policy). A loopback server needs none.
+4. `sudo systemctl daemon-reload`.
+
+Remove the drop-ins and reload to go back to Ollama.
+
+Two units stay on Ollama. The backfill always uses the Ollama adapter, so a drop-in would change
+nothing there. The fast path's follow-up has its own model setting, a 30 second budget inside the
+unit's timeout and runs on every breach page, so it is left on its local model.
 
 ## Jev (experimental)
 

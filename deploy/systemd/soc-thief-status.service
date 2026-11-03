@@ -28,7 +28,11 @@ LoadCredential=runner_approval:/etc/soc-thief/secrets/runner_approval
 LoadCredential=status_push:/etc/soc-thief/secrets/status_push
 Environment=PYTHONPATH=/opt/soc-thief/src
 Environment=PYTHONDONTWRITEBYTECODE=1
-# Report timezone (IANA name) for the local times in the status line; match the other units.
+# Report timezone (IANA name) for the local times in the status line. The shared environment
+# file overrides this UTC default, so the status line uses the same zone as the reports. The
+# file holds only non-secret settings; never put SOC_THIEF_RUNNER_APPROVAL_FILE in it, or it
+# overrides the credential path below and the check fails.
+EnvironmentFile=/etc/soc-thief/environment
 Environment=SOC_THIEF_TIMEZONE=UTC
 Environment=SOC_THIEF_RUNNER_APPROVAL_FILE=%d/runner_approval
 WorkingDirectory=/

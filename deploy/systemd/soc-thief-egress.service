@@ -1,0 +1,33 @@
+[Unit]
+Description=Soc Thief host egress policy
+# Loads /etc/soc-thief/egress.nft (see docs/DEPLOYMENT.md) before the network comes up. The
+# file is one nft transaction, so a file that fails to parse leaves the old ruleset in place.
+# `systemctl enable` adds a Requires= to each unit below. If the policy cannot load, those units
+# fail on the dependency and no container starts. Nothing removes the policy on stop: a stopped
+# unit leaves the table loaded rather than opening egress. Reload a changed file with
+# `systemctl reload`; a restart also restarts every unit below that is running.
+# The status and backup units are not listed: status runs as its own account and reports a failed
+# run, and backup has no network.
+DefaultDependencies=no
+Wants=network-pre.target
+Before=network-pre.target shutdown.target
+Before=soc-thief.service soc-thief-runner.service soc-thief-reconcile.service soc-thief-backfill.service soc-thief-fastpath.service
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/soc-thief/egress.nft
+ExecReload=/usr/sbin/nft -f /etc/soc-thief/egress.nft
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_ADMIN
+ProtectSystem=strict
+ProtectHome=yes
+RestrictAddressFamilies=AF_NETLINK AF_UNIX
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=soc-thief-egress
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=soc-thief.service soc-thief-runner.service soc-thief-reconcile.service soc-thief-backfill.service soc-thief-fastpath.service

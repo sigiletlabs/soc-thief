@@ -32,6 +32,7 @@ untested.
 | `soc-thief-fastpath.service` | `soc_thief.fastpath`: breach pages | every 10 minutes | `/etc/soc-thief/enable-fastpath` |
 | `soc-thief-status.service` | `soc_thief.status` then a heartbeat | hourly | none |
 | `soc-thief-backup.service` | `deploy/bin/soc-thief-backup` | daily 08:30 | `/var/backups/soc-thief` must be a mount point |
+| `soc-thief-egress.service` | `nft -f /etc/soc-thief/egress.nft`: the host egress policy | at boot | `/etc/soc-thief/egress.nft` must load |
 
 Each container unit has a `ConditionPathExists=` gate. Without its gate file, systemd skips the run
 without starting a container or touching the network. Removing the gate file is the quickest way to
@@ -131,6 +132,7 @@ sudo install -d -m 0700 /etc/soc-thief/secrets
 | `agent_inventory` | see [DETECTION.md](DETECTION.md#silent-agents) | fast path |
 | `status_push` | a curl config line: `url = "https://<monitor>/<push path>"` | status |
 | `jev_key` | only for the optional Jev backend, see [MODELS.md](MODELS.md#jev-experimental) | runner via a drop-in |
+| `openai_key` | only for the optional OpenAI-compatible backend, see [MODELS.md](MODELS.md#in-the-systemd-units) | runner and reconcile via a drop-in |
 
 The identity key must stay the same for the life of the state store. Back it up separately.
 
@@ -163,6 +165,7 @@ SOC_THIEF_BACKFILL_FROM=2026-01-01
 | `SOC_THIEF_NTFY_ALIAS`, `SOC_THIEF_NTFY_ADDR` | Optional: a hosts entry for your ntfy server (see the fast path below) |
 | `SOC_THIEF_FASTPATH_MODEL_BASE_URL` | Optional: turns on the fast path's follow-up investigation |
 | `SOC_THIEF_RMM_MARKERS` | Optional: trusted remote management tools, see [INVESTIGATION.md](INVESTIGATION.md#trusted-remote-management-tools) |
+| `SOC_THIEF_OPENAI_PORT`, `SOC_THIEF_OPENAI_*` | Optional: the OpenAI-compatible backend, see [MODELS.md](MODELS.md#in-the-systemd-units) |
 
 ## Networking
 
@@ -187,9 +190,11 @@ the host firewall. Allow only what you need:
 - HTTPS to your ntfy server, if you use the fast path;
 - HTTPS to a hosted model endpoint, only if you chose one.
 
-An example nftables policy, loaded by a small oneshot unit at boot:
+Put the policy in `/etc/soc-thief/egress.nft`, root-owned, mode `0600`. An example:
 
 ```
+table inet soc_thief_egress
+delete table inet soc_thief_egress
 table inet soc_thief_egress {
     chain output {
         type filter hook output priority 0; policy accept;
@@ -213,6 +218,23 @@ your own. Notes:
 - The drop rule does not send a reject, so a blocked destination shows up as a timeout.
 - Keep the drop line exactly as shown if you want `python -m soc_thief.jev_egress` to propose a
   rule for the Jev backend; it inserts before that line.
+- The first two lines make the file safe to load again. `nft -f` applies the whole file as one
+  change, so a file with an error leaves the old policy in place.
+
+`deploy/systemd/soc-thief-egress.service` loads the file at boot, before the network starts.
+Install it with the other units, check the file, then enable it:
+
+```sh
+sudo nft -c -f /etc/soc-thief/egress.nft
+sudo systemctl enable --now soc-thief-egress.service
+```
+
+Enabling it also makes every container unit require it. If the policy fails to load, those units
+fail and no container starts. The status check is not one of them: it runs as its own account,
+sees the failed runs and withholds its heartbeat. After you edit the file, apply it with
+`sudo systemctl reload soc-thief-egress.service`. A restart also stops any Soc Thief run in
+progress. Stopping or disabling the unit leaves the loaded policy in place; remove it yourself
+with `sudo nft delete table inet soc_thief_egress` if you mean to.
 
 ## The approval file
 
@@ -356,6 +378,11 @@ Briefs go to `/var/lib/soc-thief/fastpath/investigations/`, mode `0700`, files `
 journal lines through `systemctl` and `journalctl`, never credentials, state or reports. If
 everything is healthy it runs `curl --config` with the `status_push` credential to send the
 heartbeat. Point that at a push monitor that alerts you when a heartbeat is missed.
+
+It reads `/etc/soc-thief/environment` too, so its times use `SOC_THIEF_TIMEZONE` like the reports.
+Keep that file to the settings listed in step 5. In particular, do not copy
+`SOC_THIEF_RUNNER_APPROVAL_FILE` into it from `.env.example`, or the status check looks for the
+approval in the wrong place and fails.
 
 ## Reconcile, backfill and the priority lock
 

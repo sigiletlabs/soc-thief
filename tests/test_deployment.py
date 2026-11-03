@@ -27,6 +27,74 @@ class DeploymentArtifactsTests(unittest.TestCase):
                          "ExecStart=\n" + expected + "\n")
         self.assertNotIn("LoadCredential=jev_key:", base)
 
+    def test_openai_dropins_change_only_model_selection_credential_and_forwarded_port(self):
+        added = ("--env SOC_THIEF_MODEL_BACKEND=openai "
+                 "--env SOC_THIEF_OPENAI_BASE_URL=${SOC_THIEF_OPENAI_BASE_URL} "
+                 "--env SOC_THIEF_OPENAI_MODEL=${SOC_THIEF_OPENAI_MODEL} "
+                 "--env SOC_THIEF_OPENAI_API_KEY_FILE=/run/secrets/openai_key "
+                 "--env SOC_THIEF_OPENAI_TIMEOUT_SECONDS=${SOC_THIEF_OPENAI_TIMEOUT_SECONDS} "
+                 "--env SOC_THIEF_OPENAI_ALLOW_REMOTE=${SOC_THIEF_OPENAI_ALLOW_REMOTE} ")
+        # The daily run and the late-alert pass review groups through the same
+        # triage_from_environment, so both get the drop-in and one window never mixes models.
+        for name in ("runner", "reconcile"):
+            with self.subTest(unit=name):
+                base = (ROOT / "deploy/systemd" / f"soc-thief-{name}.service").read_text()
+                override = (ROOT / "deploy/systemd" / f"soc-thief-{name}-openai.conf").read_text()
+                start = next(line for line in base.splitlines() if line.startswith("ExecStart="))
+                anchor = "--env SOC_THIEF_TUNING_FILE=/run/secrets/tuning "
+                # The loopback forward moves from the Ollama port to the OpenAI server's port.
+                expected = start.replace(",-T,${SOC_THIEF_MODEL_PORT} ", ",-T,${SOC_THIEF_OPENAI_PORT} ") \
+                    .replace(anchor, anchor + added)
+                self.assertNotEqual(expected, start)
+                settings = "".join(line + "\n" for line in override.splitlines() if not line.startswith("#"))
+                # Without these defaults an unset value reaches the container as "" and is refused.
+                # The environment file overrides both; it alone can set ALLOW_REMOTE=1.
+                self.assertEqual(settings, "[Service]\n"
+                                 "Environment=SOC_THIEF_OPENAI_TIMEOUT_SECONDS=60\n"
+                                 "Environment=SOC_THIEF_OPENAI_ALLOW_REMOTE=0\n"
+                                 "LoadCredential=openai_key:/etc/soc-thief/secrets/openai_key\n"
+                                 "ExecStart=\n" + expected + "\n")
+                # Without the drop-in nothing about the model changes.
+                for absent in ("SOC_THIEF_MODEL_BACKEND", "SOC_THIEF_OPENAI", "openai_key"):
+                    self.assertNotIn(absent, base)
+        # The backfill builds OllamaTriage directly, so a drop-in there would change nothing.
+        self.assertNotIn("triage_from_environment", (ROOT / "src/soc_thief/backfill.py").read_text())
+        self.assertFalse(list((ROOT / "deploy/systemd").glob("soc-thief-backfill-openai*")))
+
+    def test_status_reads_the_report_timezone_from_the_environment_file(self):
+        unit = (ROOT / "deploy/systemd/soc-thief-status.service").read_text()
+        settings = [line for line in unit.splitlines() if line and not line.startswith("#")]
+        # EnvironmentFile= overrides Environment=, so UTC stays only as the default.
+        self.assertIn("EnvironmentFile=/etc/soc-thief/environment", settings)
+        self.assertIn("Environment=SOC_THIEF_TIMEZONE=UTC", settings)
+        # Still a host process with no container, no state and no write access.
+        for absent in ("podman", "ReadWritePaths", "StateDirectory", "/var/lib/soc-thief"):
+            self.assertFalse([line for line in settings if absent in line], absent)
+
+    def test_egress_policy_loads_before_and_gates_every_network_unit(self):
+        unit = (ROOT / "deploy/systemd/soc-thief-egress.service").read_text()
+        settings = [line for line in unit.splitlines() if line and not line.startswith("#")]
+        guide = (ROOT / "docs/DEPLOYMENT.md").read_text()
+        self.assertIn("/etc/soc-thief/egress.nft", guide)
+        self.assertIn("deploy/systemd/soc-thief-egress.service", guide)
+        self.assertIn("ExecStart=/usr/sbin/nft -f /etc/soc-thief/egress.nft", settings)
+        self.assertIn("ExecReload=/usr/sbin/nft -f /etc/soc-thief/egress.nft", settings)
+        for line in ("Type=oneshot", "RemainAfterExit=yes", "DefaultDependencies=no",
+                     "Before=network-pre.target shutdown.target", "Wants=network-pre.target"):
+            self.assertIn(line, settings)
+        # Stopping the unit must never open egress.
+        self.assertFalse([line for line in settings if line.startswith("ExecStop")])
+        # Every unit that starts a container is ordered after the policy and requires it once
+        # enabled, so a policy that fails to load stops them from starting at all.
+        network = sorted(path.name for path in (ROOT / "deploy/systemd").glob("*.service")
+                         if "/usr/bin/podman " in path.read_text())
+        self.assertEqual(len(network), 5)
+        ordered = " ".join(line[len("Before="):] for line in settings if line.startswith("Before=")).split()
+        required = next(line for line in settings if line.startswith("RequiredBy=")).split("=", 1)[1].split()
+        self.assertEqual(sorted(required), network)
+        self.assertLessEqual(set(network), set(ordered))
+        self.assertIn("WantedBy=multi-user.target", settings)
+
     def test_runtime_is_gated_and_hardened(self):
         unit = (ROOT / "deploy/systemd/soc-thief.service").read_text()
         self.assertIn("ConditionPathExists=/etc/soc-thief/enable-schedule", unit)

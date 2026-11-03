@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Pre-publication check for this repository. Any finding blocks.
 #
-#   scripts/check-public            everything: working tree and full git history
+#   scripts/check-public            everything: working tree, plus the history of every local
+#                                   branch and tag (what a push can send)
 #   scripts/check-public --staged   quick check of staged changes (pre-commit hook)
 #
 # Checks:
@@ -87,7 +88,7 @@ if [ -n "$patterns" ]; then
   # Tracked files only, so ignored build output doesn't count. Prints file:line, not the match.
   hits=$(git ls-files -z | xargs -0 grep -IinE -f <(printf '%s\n' "$patterns") -- 2>/dev/null | cut -d: -f1,2 || true)
   [ -z "$hits" ] || fail "deny-list: private terms at $(echo $hits)"
-  if git log --all -p --format='%an %ae %cn %ce%n%B' | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
+  if git log --branches --tags -p --format='%an %ae %cn %ce%n%B' | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
     fail "deny-list: a private term appears in git history or commit metadata"
   fi
   if git ls-files | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
@@ -97,7 +98,7 @@ fi
 
 # --- commit identities ---------------------------------------------------------------------
 ran=$((ran + 1))
-emails=$(git log --all --format='%ae%n%ce' | sort -u)
+emails=$(git log --branches --tags --format='%ae%n%ce' | sort -u)
 allowed_emails=${SOC_THIEF_ALLOWED_EMAILS:-'@users\.noreply\.github\.com$|^noreply@github\.com$|@sigiletlabs\.com$'}
 bad_emails=$(printf '%s\n' "$emails" | grep -vE "$allowed_emails" || true)
 [ -z "$bad_emails" ] || fail "commit email not on the allowed list ($allowed_emails); found $(echo "$bad_emails" | wc -l) other address(es)"
@@ -106,7 +107,7 @@ bad_emails=$(printf '%s\n' "$emails" | grep -vE "$allowed_emails" || true)
 ran=$((ran + 1))
 bad=$(git ls-files | grep -P "$forbidden" || true)
 [ -z "$bad" ] || fail "forbidden file tracked: $(echo $bad)"
-bad=$(git log --all --format= --name-only --diff-filter=A | sort -u | grep -P "$forbidden" || true)
+bad=$(git log --branches --tags --format= --name-only --diff-filter=A | sort -u | grep -P "$forbidden" || true)
 [ -z "$bad" ] || fail "forbidden file in history: $(echo $bad)"
 
 # --- snapshots from a real deployment ------------------------------------------------------
