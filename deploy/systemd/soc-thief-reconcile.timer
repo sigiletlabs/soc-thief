@@ -1,0 +1,14 @@
+[Unit]
+Description=Run Soc Thief late-arrival reconciliation after the daily runner
+
+[Timer]
+# The daily runner fires 08:20 (+5m) and may hold the nonblocking state lock for up to
+# its 1800s unit timeout; 10:30 leaves that window clear.
+# The zone must equal SOC_THIEF_TIMEZONE so the run follows the local 08:00 boundary.
+OnCalendar=*-*-* 10:30:00 UTC
+Persistent=true
+RandomizedDelaySec=5m
+Unit=soc-thief-reconcile.service
+
+[Install]
+WantedBy=timers.target

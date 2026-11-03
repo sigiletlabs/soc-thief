@@ -1,0 +1,87 @@
+[Unit]
+Description=Soc Thief approved all-history backfill (one window per run)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/soc-thief/enable-backfill
+
+[Service]
+Type=oneshot
+User=soc-thief
+Group=soc-thief
+WorkingDirectory=/var/lib/soc-thief
+EnvironmentFile=/etc/soc-thief/environment
+LoadCredential=wazuh_indexer_url:/etc/soc-thief/secrets/wazuh_indexer_url
+LoadCredential=wazuh_indexer_username:/etc/soc-thief/secrets/wazuh_indexer_username
+LoadCredential=wazuh_indexer_password:/etc/soc-thief/secrets/wazuh_indexer_password
+LoadCredential=wazuh_indexer_ca:/etc/soc-thief/secrets/wazuh_indexer_ca
+LoadCredential=discord_webhook_url:/etc/soc-thief/secrets/discord_webhook_url
+LoadCredential=identity_key:/etc/soc-thief/secrets/identity_key
+LoadCredential=runner_approval:/etc/soc-thief/secrets/runner_approval
+LoadCredential=tuning:/etc/soc-thief/secrets/tuning
+RuntimeDirectory=soc-thief
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+StateDirectory=soc-thief
+StateDirectoryMode=0700
+Environment=XDG_RUNTIME_DIR=/run/soc-thief
+# Report timezone, an IANA name: the 08:00-to-08:00 report day and every local time shown.
+# /etc/soc-thief/environment overrides this default. Keep the timers' OnCalendar zone equal to it.
+Environment=SOC_THIEF_TIMEZONE=UTC
+ExecStart=/usr/bin/flock --exclusive --nonblock /run/soc-thief/priority.lock /usr/bin/podman --root /var/lib/soc-thief/podman --runroot /run/soc-thief/podman run --pull=never --rm --replace --name soc-thief-backfill --read-only --cap-drop=ALL --security-opt=no-new-privileges --userns=keep-id:uid=65532,gid=65532 --network pasta:-T,${SOC_THIEF_INDEXER_PORT},-T,${SOC_THIEF_MODEL_PORT} --add-host ${SOC_THIEF_INDEXER_ALIAS}:127.0.0.1 --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --volume /var/lib/soc-thief:/var/lib/soc-thief:Z --mount type=bind,src=%d,dst=/run/secrets,ro=true,relabel=private --env WAZUH_INDEXER_URL_FILE=/run/secrets/wazuh_indexer_url --env WAZUH_INDEXER_USERNAME_FILE=/run/secrets/wazuh_indexer_username --env WAZUH_INDEXER_PASSWORD_FILE=/run/secrets/wazuh_indexer_password --env WAZUH_INDEXER_CA_FILE=/run/secrets/wazuh_indexer_ca --env DISCORD_WEBHOOK_URL_FILE=/run/secrets/discord_webhook_url --env SOC_THIEF_IDENTITY_KEY_FILE=/run/secrets/identity_key --env SOC_THIEF_RUNNER_APPROVAL_FILE=/run/secrets/runner_approval --env SOC_THIEF_TUNING_FILE=/run/secrets/tuning --env MODEL_BASE_URL=http://127.0.0.1:${SOC_THIEF_MODEL_PORT} --env MODEL_NAME=qwen3:4b --env MODEL_TIMEOUT_SECONDS=60 --env STATE_PATH=/var/lib/soc-thief/state --env SOC_THIEF_TIMEZONE=${SOC_THIEF_TIMEZONE} --entrypoint python ${SOC_THIEF_IMAGE} -m soc_thief.backfill --from ${SOC_THIEF_BACKFILL_FROM}
+PrivateTmp=yes
+PrivateDevices=yes
+BindPaths=/dev/net/tun
+DeviceAllow=/dev/net/tun rw
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+UMask=0077
+ReadWritePaths=/var/lib/soc-thief /run/soc-thief
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=soc-thief-backfill
+TimeoutStartSec=1800s
+TimeoutStopSec=15s
+KillMode=control-group
+
+# Worker timeout (runner deadline + 60s grace) plus bounded parent health delivery fits 1800s.
+# The nonblocking priority lock makes any manual or timer start exit before Podman while daily or
+# reconcile is active. This unit has no command or systemd relationship capable of stopping them.
+# soc_thief.backfill refuses to start in 07:30-09:30 local (SOC_THIEF_TIMEZONE) time, so this unit cannot hold
+# the nonblocking state lock while the 08:20 daily runner is due. Each run processes at most
+# one local report day. SOC_THIEF_BACKFILL_FROM is a non-secret YYYY-MM-DD origin date.
+# Missing credential files make systemd fail the unit before any container starts.
+# The tuning credential is required; create it as {"version":1,"entries":[]} (mode 0600).
+# An invalid tuning file applies no tuning and reports a health failure.
+# Rootless Podman requires creating user and mount namespaces; do not set
+# RestrictNamespaces or a restrictive SystemCallFilter without testing the
+# selected Podman storage driver. Network egress is enforced by the host policy.
+# pasta -T forwards only the listed container-loopback ports to host loopback. Validate
+# forwarding, --add-host resolution and TLS identity on the deployment host before use.
+# Four units share RuntimeDirectory=soc-thief (verifier, runner, reconcile, backfill). Without
+# RuntimeDirectoryPreserve=yes systemd deletes /run/soc-thief when ANY of them deactivates, even
+# while another is still running: that unlinks the priority.lock inode a running unit holds, so
+# the next flock creates a fresh inode and acquires immediately, and it destroys the Podman
+# runroot of the running container. The backfill refusal path triggers it (nonblocking flock
+# refused -> unit exits -> directory removed). The application state lock is NOT affected: it is
+# /var/lib/soc-thief/state/state.lock under StateDirectory, which systemd keeps, so state
+# integrity still fails closed. What is lost is the documented priority guarantee and the
+# running container's Podman runroot and XDG_RUNTIME_DIR.
+# Measured on the deployment host by a per-setting matrix run through this unit after killing the
+# rootless pause process (as after a reboot). Rootless Podman cannot start under three settings,
+# which are therefore absent, not forgotten:
+#   NoNewPrivileges      - blocks the setuid newuidmap ("write to uid_map failed"). The container
+#                          itself still runs with --security-opt=no-new-privileges.
+#   ProtectKernelTunables, ProtectHostname - overmount parts of /proc, so the kernel refuses the
+#                          container a proc mount of its own.
+# PrivateDevices stays, with /dev/net/tun let back in for pasta. AF_NETLINK is needed by runc
+# for network setup. ProtectSystem=strict works only together with PrivateTmp=yes.

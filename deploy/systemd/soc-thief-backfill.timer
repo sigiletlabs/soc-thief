@@ -1,0 +1,13 @@
+[Unit]
+Description=Run one Soc Thief backfill window per hour outside the daily report period
+
+[Timer]
+# At most one local report day per run; runs in 07:30-09:30 SOC_THIEF_TIMEZONE time defer themselves.
+# Missed runs are not replayed at boot, so a restart cannot collide with the daily runner.
+OnCalendar=hourly
+Persistent=false
+RandomizedDelaySec=2m
+Unit=soc-thief-backfill.service
+
+[Install]
+WantedBy=timers.target

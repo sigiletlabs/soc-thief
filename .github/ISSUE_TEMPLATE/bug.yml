@@ -1,0 +1,33 @@
+name: Bug report
+description: Something doesn't work the way the docs say it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please don't paste real alerts, host names, IP addresses, tokens or webhook URLs.
+        Replace them with placeholders. Security problems go to a private report instead:
+        see SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The smallest steps. A demo snapshot (`python -m soc_thief.demo`) is ideal if it shows the problem.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part
+      options: [Collector, Policy or tuning, Model backend, Digest or delivery, Fast path or paging, Console TUI, Console web, Deployment, Docs]

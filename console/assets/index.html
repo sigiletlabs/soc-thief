@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Soc Thief Console</title>
+<link rel="stylesheet" href="/app.css">
+<script src="/app.js" defer></script>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <h1>SOC THIEF <span class="slash">//</span> NIGHT SHIFT</h1>
+    <p class="sub">read-only console &middot; the model advises, policy decides</p>
+  </div>
+  <div class="meta">
+    <span id="demo" class="badge demo" hidden>DEMO DATA</span>
+    <span id="freshness" class="pill">loading</span>
+    <span id="paged" class="badge alarm" hidden></span>
+  </div>
+</header>
+
+<div id="stale" class="banner alarm" role="alert" hidden></div>
+
+<section class="window panel" aria-label="Window">
+  <div><span class="lbl">Window</span> <span id="win-range" class="val">-</span> <span id="win-tz" class="dim"></span></div>
+  <div><span class="lbl">Generated</span> <span id="generated" class="val">-</span></div>
+  <div><span class="lbl">Health</span> <span id="health-top" class="status">-</span></div>
+</section>
+
+<nav class="tabs" aria-label="Views">
+  <button type="button" data-view="overview" class="tab active">1 Overview</button>
+  <button type="button" data-view="groups" class="tab">2 Groups</button>
+  <button type="button" data-view="health" class="tab">3 Health</button>
+  <button type="button" data-view="history" class="tab">4 History</button>
+</nav>
+
+<main>
+  <section id="error" class="panel error" hidden>
+    <h2>No snapshot to show</h2>
+    <p><span class="lbl">File</span> <span id="error-file"></span></p>
+    <p><span class="lbl">Error</span> <span id="error-text"></span></p>
+    <p class="dim">The file is re-read every 2 seconds.</p>
+  </section>
+
+  <section id="view-overview" class="view">
+    <div class="tiles">
+      <div class="tile panel"><span class="lbl">Events</span><span id="t-events" class="num glow">-</span></div>
+      <div class="tile panel"><span class="lbl">Groups</span><span id="t-groups" class="num glow">-</span></div>
+      <div class="tile panel"><span class="lbl">Duplicates</span><span id="t-dups" class="num">-</span></div>
+      <div class="tile panel"><span class="lbl">Muted by tuning</span><span id="t-muted" class="num orange">-</span></div>
+      <div class="tile panel"><span class="lbl">Delivery required</span><span id="t-deliver" class="num red">-</span></div>
+      <div class="tile panel"><span class="lbl">Health</span><span id="t-health" class="num status">-</span></div>
+    </div>
+
+    <div class="panel">
+      <h2>Events per hour <span class="legend"><i class="key ev"></i>events <i class="key dr"></i>delivery required</span></h2>
+      <div id="timeline" class="timeline" role="img" aria-label="Hourly events and delivery-required counts"></div>
+    </div>
+
+    <div id="breach-panel" class="panel">
+      <h2>Breaches</h2>
+      <ul id="breaches" class="breaches"></ul>
+    </div>
+  </section>
+
+  <section id="view-groups" class="view" hidden>
+    <div class="filters panel">
+      <label><span class="lbl">Filter</span>
+        <input id="filter" type="search" maxlength="64" autocomplete="off" spellcheck="false" placeholder="rule, host, tag...">
+      </label>
+      <label><span class="lbl">Category</span>
+        <select id="category">
+          <option value="">all</option>
+          <option value="failed">failed</option>
+          <option value="new">new</option>
+          <option value="spike">spike</option>
+          <option value="recurring">recurring</option>
+        </select>
+      </label>
+      <span id="group-count" class="dim"></span>
+      <span id="group-capped" class="orange val" hidden></span>
+    </div>
+    <div class="split">
+      <div class="panel scroll">
+        <table class="grid groups">
+          <thead><tr>
+            <th>Category</th><th>Lvl</th><th>Rule</th><th>Description</th>
+            <th class="r">Count</th><th>Agents</th><th>Tuning</th><th>Decision</th>
+          </tr></thead>
+          <tbody id="group-rows"></tbody>
+        </table>
+      </div>
+      <aside id="detail" class="panel detail" aria-live="polite">
+        <p class="dim">Select a group to see why it was delivered.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="view-health" class="view" hidden>
+    <div class="panel">
+      <h2>Health <span id="health-overall" class="status"></span></h2>
+      <table class="grid">
+        <thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead>
+        <tbody id="health-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-history" class="view" hidden>
+    <div class="panel scroll">
+      <h2>Earlier windows <span class="dim">newest first</span></h2>
+      <table class="grid">
+        <thead><tr><th>Start</th><th>End</th><th class="r">Events</th><th class="r">Groups</th><th>Delivered</th><th>Health</th></tr></thead>
+        <tbody id="history-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="foot dim">
+  Read-only. Served from 127.0.0.1. No data leaves this machine.
+</footer>
+</body>
+</html>

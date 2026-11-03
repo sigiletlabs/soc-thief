@@ -1,0 +1,23 @@
+name: Idea or feature
+description: Suggest something new.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Soc Thief makes hard?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Safety rules
+      description: Soc Thief has a few rules that changes must keep. See docs/ARCHITECTURE.md.
+      options:
+        - label: This doesn't let a model hide or suppress an alert.
+          required: true

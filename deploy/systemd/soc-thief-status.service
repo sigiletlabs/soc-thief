@@ -1,0 +1,63 @@
+[Unit]
+Description=Check Soc Thief runner health and send a heartbeat only when healthy
+# A heartbeat is sent only after a healthy check, so a refused approval, an approval within
+# three days of expiry, a failed or stale run, a stopped timer, a failed check and a host that
+# is down all end as a missed heartbeat. The heartbeat monitor (e.g. an Uptime Kuma push monitor)
+# alerts on the miss.
+# The runner cannot report its own lapsed approval: it refuses before it reaches Discord.
+# Once the fast path timer is enabled or running, the same check also requires a fresh
+# fully-checked fast path window, no coverage gap in the last two hours, and a fresh agent
+# liveness result with no silent agent, all read from the fast path's journal lines. Once the
+# fast path is live, a drop-in setting Environment=SOC_THIEF_EXPECT_FASTPATH=1 makes a disabled
+# fast path timer fail the check too; see docs/DEPLOYMENT.md.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# A static account from deploy/sysusers.d, not DynamicUser: Ubuntu's dbus-daemon cannot resolve a
+# dynamic uid and drops the connection, so `systemctl show` failed.
+User=soc-thief-status
+Group=soc-thief-status
+SupplementaryGroups=systemd-journal
+RemoveIPC=yes
+# Read only for its expiry; the check never prints the file and never reaches Discord.
+LoadCredential=runner_approval:/etc/soc-thief/secrets/runner_approval
+# A curl config holding one `url = "..."` line. The push token is a credential: anyone holding it
+# can fake a healthy beat, so it stays out of argv, the unit file and the journal.
+LoadCredential=status_push:/etc/soc-thief/secrets/status_push
+Environment=PYTHONPATH=/opt/soc-thief/src
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Report timezone (IANA name) for the local times in the status line; match the other units.
+Environment=SOC_THIEF_TIMEZONE=UTC
+Environment=SOC_THIEF_RUNNER_APPROVAL_FILE=%d/runner_approval
+WorkingDirectory=/
+# The heartbeat runs only when the check exits 0 (healthy). It is chained in ExecStart rather
+# than ExecStartPost: on the deployment host (systemd 255, curl 8.5) curl could not read its --config
+# credential from ExecStartPost, though the same command read it as a main process under this
+# account, credentials and every hardening option below.
+ExecStart=/bin/sh -c '/usr/bin/python3 -m soc_thief.status && exec /usr/bin/curl --fail --silent --show-error --max-time 20 --output /dev/null --config %d/status_push'
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=soc-thief-status
+# Five inspection commands at status.COMMAND_TIMEOUT_SECONDS (60s), the 20s heartbeat and margin.
+TimeoutStartSec=330s

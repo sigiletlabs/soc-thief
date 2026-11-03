@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Soc Thief breach fast path every ten minutes
+
+[Timer]
+OnBootSec=5m
+OnUnitInactiveSec=10m
+AccuracySec=30s
+Unit=soc-thief-fastpath.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,4443 @@
+{
+ "schema": "soc-thief.snapshot/1",
+ "generated_at": "2026-11-07T08:00:04+11:00",
+ "source": "demo",
+ "timezone": "Australia/Sydney",
+ "window": {
+  "start": "2026-11-06T08:00:00+11:00",
+  "end": "2026-11-07T08:00:00+11:00",
+  "events": 29214,
+  "groups": 161,
+  "duplicates": 584,
+  "muted_by_tuning": 31
+ },
+ "health": {
+  "status": "attention",
+  "checks": [
+   {
+    "name": "collector",
+    "status": "ok",
+    "detail": "29214 events in 2 indices; 584 duplicates dropped"
+   },
+   {
+    "name": "model",
+    "status": "attention",
+    "detail": "2 groups failed review; delivered anyway"
+   },
+   {
+    "name": "tuning",
+    "status": "ok",
+    "detail": "6 entries; 31 groups muted or low; 1 protected groups ignored tuning"
+   },
+   {
+    "name": "digest",
+    "status": "ok",
+    "detail": "1 messages and an attachment rendered; demo: captured, not sent"
+   },
+   {
+    "name": "fast path",
+    "status": "ok",
+    "detail": "3 breach pages; demo: captured, not sent"
+   }
+  ]
+ },
+ "groups": [
+  {
+   "id": "g-8b3d7a66a966",
+   "rule_id": "60602",
+   "rule_description": "Windows application error event.",
+   "level": 9,
+   "count": 1,
+   "agents": [
+    "ws-12"
+   ],
+   "first_seen": "2026-11-06T11:01:15+11:00",
+   "last_seen": "2026-11-06T11:01:15+11:00",
+   "category": "failed",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": true,
+    "reason": "invalid_model_result"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-bafb08797b12",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T12:25:46+11:00",
+   "last_seen": "2026-11-07T04:17:52+11:00",
+   "category": "failed",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": true,
+    "reason": "invalid_model_result"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b5491b4cbe1b",
+   "rule_id": "40112",
+   "rule_description": "Multiple authentication failures followed by a success.",
+   "level": 12,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-07T03:52:03+11:00",
+   "last_seen": "2026-11-07T03:52:03+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "breach_brute_force_success"
+   },
+   "model": null,
+   "breach_signals": [
+    "brute_force_success"
+   ]
+  },
+  {
+   "id": "g-60a6526599e8",
+   "rule_id": "5902",
+   "rule_description": "New user added to the system.",
+   "level": 8,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-07T03:58:11+11:00",
+   "last_seen": "2026-11-07T03:58:11+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "breach_account_created"
+   },
+   "model": null,
+   "breach_signals": [
+    "account_created"
+   ]
+  },
+  {
+   "id": "g-a077bea6cb32",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-07T04:05:47+11:00",
+   "last_seen": "2026-11-07T04:05:47+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "breach_critical_file_change"
+   },
+   "model": null,
+   "breach_signals": [
+    "critical_file_change"
+   ]
+  },
+  {
+   "id": "g-1d1d332246d5",
+   "rule_id": "5715",
+   "rule_description": "sshd: authentication success.",
+   "level": 3,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-07T03:52:02+11:00",
+   "last_seen": "2026-11-07T03:52:02+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "breach_brute_force_success"
+   },
+   "model": null,
+   "breach_signals": [
+    "brute_force_success"
+   ]
+  },
+  {
+   "id": "g-6eb848de6a9c",
+   "rule_id": "92213",
+   "rule_description": "Executable file dropped in folder commonly used by malware",
+   "level": 15,
+   "count": 3,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-07T01:14:30+11:00",
+   "last_seen": "2026-11-07T01:14:44+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "critical_severity"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-d0d85907d30b",
+   "rule_id": "92057",
+   "rule_description": "Powershell.exe spawned a powershell process which executed a base64 encoded command",
+   "level": 12,
+   "count": 4,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-07T01:12:05+11:00",
+   "last_seen": "2026-11-07T01:12:32+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "critical_severity"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-48a475ea9633",
+   "rule_id": "5712",
+   "rule_description": "sshd: brute force trying to get access to the system. Non existent user.",
+   "level": 10,
+   "count": 64,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-07T02:10:00+11:00",
+   "last_seen": "2026-11-07T02:39:24+11:00",
+   "category": "new",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b268db24bc79",
+   "rule_id": "61138",
+   "rule_description": "New Windows Service Created",
+   "level": 5,
+   "count": 2,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T23:40:00+11:00",
+   "last_seen": "2026-11-06T23:41:00+11:00",
+   "category": "new",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "suspicious",
+    "confidence": 0.8,
+    "tags": [
+     "persistence",
+     "windows"
+    ],
+    "summary": "A new service on a domain controller needs a matching change record."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-03195c313e47",
+   "rule_id": "5712",
+   "rule_description": "sshd: brute force trying to get access to the system. Non existent user.",
+   "level": 10,
+   "count": 815,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T18:36:57+11:00",
+   "last_seen": "2026-11-07T07:37:29+11:00",
+   "category": "spike",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-e83e34eb3e65",
+   "rule_id": "5710",
+   "rule_description": "sshd: Attempt to login using a non-existent user",
+   "level": 5,
+   "count": 1454,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:56:38+11:00",
+   "last_seen": "2026-11-07T07:50:09+11:00",
+   "category": "spike",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-9ae4b001da11",
+   "rule_id": "31151",
+   "rule_description": "Multiple web server 400 error codes from same source ip.",
+   "level": 10,
+   "count": 2,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:33:45+11:00",
+   "last_seen": "2026-11-06T10:31:33+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "suspicious",
+    "confidence": 0.85,
+    "tags": [
+     "web",
+     "scanning"
+    ],
+    "summary": "Many 4xx responses from one source look like a path scanner."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-e949535328c7",
+   "rule_id": "31151",
+   "rule_description": "Multiple web server 400 error codes from same source ip.",
+   "level": 10,
+   "count": 2,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T15:33:28+11:00",
+   "last_seen": "2026-11-07T00:13:57+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "suspicious",
+    "confidence": 0.85,
+    "tags": [
+     "web",
+     "scanning"
+    ],
+    "summary": "Many 4xx responses from one source look like a path scanner."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-09acc99db425",
+   "rule_id": "60602",
+   "rule_description": "Windows application error event.",
+   "level": 9,
+   "count": 4,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-06T12:23:31+11:00",
+   "last_seen": "2026-11-06T15:09:49+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "unknown",
+    "confidence": 0.6,
+    "tags": [
+     "windows",
+     "stability"
+    ],
+    "summary": "Application crashes; not a security signal by themselves."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-b471243d0012",
+   "rule_id": "60602",
+   "rule_description": "Windows application error event.",
+   "level": 9,
+   "count": 4,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T10:32:18+11:00",
+   "last_seen": "2026-11-06T23:26:15+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "unknown",
+    "confidence": 0.6,
+    "tags": [
+     "windows",
+     "stability"
+    ],
+    "summary": "Application crashes; not a security signal by themselves."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-8a7c47b04476",
+   "rule_id": "60602",
+   "rule_description": "Windows application error event.",
+   "level": 9,
+   "count": 3,
+   "agents": [
+    "ws-03"
+   ],
+   "first_seen": "2026-11-06T11:57:58+11:00",
+   "last_seen": "2026-11-06T16:37:23+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "unknown",
+    "confidence": 0.6,
+    "tags": [
+     "windows",
+     "stability"
+    ],
+    "summary": "Application crashes; not a security signal by themselves."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-1937818989f3",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 26,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:09:41+11:00",
+   "last_seen": "2026-11-07T07:42:17+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-37d1d5305d0d",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 26,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:05:52+11:00",
+   "last_seen": "2026-11-07T05:55:54+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-a4d36c3534d8",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 26,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:11:45+11:00",
+   "last_seen": "2026-11-07T07:19:03+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-89fc9099ba94",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 24,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T08:20:43+11:00",
+   "last_seen": "2026-11-07T05:20:28+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-580fed5de76a",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 22,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:02:50+11:00",
+   "last_seen": "2026-11-07T07:25:04+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-77dbb8e7dc70",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 20,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:01:38+11:00",
+   "last_seen": "2026-11-07T06:26:44+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-2154a77bf83d",
+   "rule_id": "550",
+   "rule_description": "Integrity checksum changed.",
+   "level": 7,
+   "count": 19,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T08:13:13+11:00",
+   "last_seen": "2026-11-07T04:46:01+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "File changes under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-70f4f49bb43e",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 11,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:34:06+11:00",
+   "last_seen": "2026-11-07T07:45:17+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-39611c0f78c8",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 8,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T10:37:50+11:00",
+   "last_seen": "2026-11-07T05:15:43+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-4cf326ead038",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 8,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:04:23+11:00",
+   "last_seen": "2026-11-07T07:23:25+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-ba91128b589a",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 8,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T10:41:04+11:00",
+   "last_seen": "2026-11-07T07:07:32+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-bb2e0e02abc4",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 7,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T12:40:48+11:00",
+   "last_seen": "2026-11-07T07:16:27+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-f008e98a9f95",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 7,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T13:45:14+11:00",
+   "last_seen": "2026-11-06T17:49:16+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-5d765e167669",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 6,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T11:19:50+11:00",
+   "last_seen": "2026-11-06T15:07:27+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b13edf6a16a4",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 6,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:04:25+11:00",
+   "last_seen": "2026-11-07T07:34:09+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-2b98efd4bbc5",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 5,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T12:07:08+11:00",
+   "last_seen": "2026-11-06T16:46:44+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-cb3f1979b5a2",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 5,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T14:41:50+11:00",
+   "last_seen": "2026-11-07T05:57:17+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-4a7fc6b3aabb",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 4,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T11:49:07+11:00",
+   "last_seen": "2026-11-06T15:47:28+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-90441f3cfa3d",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 4,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:50:04+11:00",
+   "last_seen": "2026-11-06T13:00:35+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-cb07bf51c556",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 4,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:05:58+11:00",
+   "last_seen": "2026-11-06T15:30:45+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0b7676974003",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 3,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:35:33+11:00",
+   "last_seen": "2026-11-06T17:26:18+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-9c774938df6e",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 3,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T11:33:03+11:00",
+   "last_seen": "2026-11-06T15:04:03+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-f9ce7664c665",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 3,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T14:42:01+11:00",
+   "last_seen": "2026-11-06T17:35:05+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-4fdf39f51163",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T15:27:50+11:00",
+   "last_seen": "2026-11-07T05:24:57+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-610719dfc509",
+   "rule_id": "533",
+   "rule_description": "Listened ports status (netstat) changed (new port opened or closed).",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T12:19:40+11:00",
+   "last_seen": "2026-11-07T02:28:13+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-74c27e18cdc6",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:25:06+11:00",
+   "last_seen": "2026-11-06T14:21:06+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-8089fd617cea",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T12:22:14+11:00",
+   "last_seen": "2026-11-06T21:07:23+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-aba6295789cb",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T23:46:37+11:00",
+   "last_seen": "2026-11-07T05:35:03+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-c92177a1692b",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T15:49:05+11:00",
+   "last_seen": "2026-11-06T19:42:32+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-e080004edfdb",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T13:26:07+11:00",
+   "last_seen": "2026-11-06T16:30:36+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-f17c09e36c08",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:28:13+11:00",
+   "last_seen": "2026-11-06T13:27:42+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-fdb86f73213c",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 2,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T11:12:53+11:00",
+   "last_seen": "2026-11-06T13:23:54+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-05618637d160",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure mounting of cramfs filesystems is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:45:00+11:00",
+   "last_seen": "2026-11-06T09:45:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-083cd2d16301",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:40:00+11:00",
+   "last_seen": "2026-11-06T09:40:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0937cb2a38bd",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure separate partition exists for /var/tmp.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:21:00+11:00",
+   "last_seen": "2026-11-06T09:21:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0a2e7ec2ec5b",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure rsyslog default file permissions are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:54:00+11:00",
+   "last_seen": "2026-11-06T09:54:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0a4f9a9f486a",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure permissions on /etc/crontab are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:06:00+11:00",
+   "last_seen": "2026-11-06T09:06:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0da45bf20fb6",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:16:00+11:00",
+   "last_seen": "2026-11-06T09:16:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-0f5dbafc5ba6",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure auditd service is enabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:31:00+11:00",
+   "last_seen": "2026-11-06T09:31:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-136ed4bffdbf",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure core dumps are restricted.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:43:00+11:00",
+   "last_seen": "2026-11-06T09:43:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-1875e0fe6125",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure separate partition exists for /var/tmp.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:17:00+11:00",
+   "last_seen": "2026-11-06T09:17:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-21f4dfb92289",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure auditd service is enabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:16:00+11:00",
+   "last_seen": "2026-11-06T09:16:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-33465c7b73d6",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure rsyslog default file permissions are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:28:00+11:00",
+   "last_seen": "2026-11-06T09:28:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-335c679be920",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:38:00+11:00",
+   "last_seen": "2026-11-06T09:38:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-3e382b070f3c",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure permissions on /etc/crontab are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:41:00+11:00",
+   "last_seen": "2026-11-06T09:41:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-499d4637517d",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure mounting of cramfs filesystems is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:23:00+11:00",
+   "last_seen": "2026-11-06T09:23:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-4a19ff94f31c",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:27:00+11:00",
+   "last_seen": "2026-11-06T09:27:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-4a98897329d5",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure chrony is configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:55:00+11:00",
+   "last_seen": "2026-11-06T09:55:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-5196fdfed1de",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T18:53:48+11:00",
+   "last_seen": "2026-11-06T18:53:48+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-57ceb97e26c2",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:21:00+11:00",
+   "last_seen": "2026-11-06T09:21:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-5ad029567fd6",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:17:00+11:00",
+   "last_seen": "2026-11-06T09:17:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-5d0bd83ebf57",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:21:00+11:00",
+   "last_seen": "2026-11-06T09:21:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-5e4e31adbbda",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure chrony is configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:33:00+11:00",
+   "last_seen": "2026-11-06T09:33:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-6356e6940a5c",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure bootloader password is set.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:30:00+11:00",
+   "last_seen": "2026-11-06T09:30:00+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-6da2a88cde4c",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure auditd service is enabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:38:00+11:00",
+   "last_seen": "2026-11-06T09:38:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-6daa9b46c39d",
+   "rule_id": "2902",
+   "rule_description": "New dpkg (Debian Package) installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T10:42:26+11:00",
+   "last_seen": "2026-11-06T10:42:26+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-73aeb82ccfa9",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (42)",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:35:36+11:00",
+   "last_seen": "2026-11-06T09:35:36+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-748bb229859f",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:27:44+11:00",
+   "last_seen": "2026-11-06T09:27:44+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-80dbfe287c0a",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure mounting of cramfs filesystems is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T09:07:00+11:00",
+   "last_seen": "2026-11-06T09:07:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-859b068a28c3",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:48:00+11:00",
+   "last_seen": "2026-11-06T09:48:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-873deac38661",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure chrony is configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:03:00+11:00",
+   "last_seen": "2026-11-06T09:03:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-929002ab60ab",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure auditd service is enabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:12:00+11:00",
+   "last_seen": "2026-11-06T09:12:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-9427099f5df4",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure rsyslog default file permissions are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T09:48:00+11:00",
+   "last_seen": "2026-11-06T09:48:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-97e01d088725",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure chrony is configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T09:36:00+11:00",
+   "last_seen": "2026-11-06T09:36:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-a0df3b22906a",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure core dumps are restricted.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:33:00+11:00",
+   "last_seen": "2026-11-06T09:33:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-a920e63c34d2",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure bootloader password is set.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:16:00+11:00",
+   "last_seen": "2026-11-06T09:16:00+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-ab0d1b80bcf4",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure permissions on /etc/crontab are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:25:00+11:00",
+   "last_seen": "2026-11-06T09:25:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-ad8ad387ad6c",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T09:33:00+11:00",
+   "last_seen": "2026-11-06T09:33:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-af9e724eb7ff",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure permissions on /etc/crontab are configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:13:00+11:00",
+   "last_seen": "2026-11-06T09:13:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-b4ebcd4fa47b",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure bootloader password is set.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:08:00+11:00",
+   "last_seen": "2026-11-06T09:08:00+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b9b9722ee5e6",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure separate partition exists for /var/tmp.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:24:00+11:00",
+   "last_seen": "2026-11-06T09:24:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-c440b48a94db",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure separate partition exists for /var/tmp.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T09:15:00+11:00",
+   "last_seen": "2026-11-06T09:15:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-ca3ae1da0776",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure chrony is configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:57:00+11:00",
+   "last_seen": "2026-11-06T09:57:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-d5783ddfaa06",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure AIDE is installed.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:26:00+11:00",
+   "last_seen": "2026-11-06T09:26:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-d5a04b6d2885",
+   "rule_id": "2904",
+   "rule_description": "Dpkg (Debian Package) half configured.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T11:54:02+11:00",
+   "last_seen": "2026-11-06T11:54:02+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "patching"
+    ],
+    "summary": "Package configuration during the patch window."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-d9aec4098fec",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:18:00+11:00",
+   "last_seen": "2026-11-06T09:18:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-dd22776c2c20",
+   "rule_id": "19007",
+   "rule_description": "CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Ensure SSH X11 forwarding is disabled.",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:57:00+11:00",
+   "last_seen": "2026-11-06T09:57:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Failed configuration check; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-ee08c43af2f7",
+   "rule_id": "19004",
+   "rule_description": "SCA summary: CIS Ubuntu Linux 22.04 LTS Benchmark v1.0.0: Score less than 50% (41)",
+   "level": 7,
+   "count": 1,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:19:07+11:00",
+   "last_seen": "2026-11-06T08:19:07+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.9,
+    "tags": [
+     "compliance"
+    ],
+    "summary": "Configuration assessment score; a hardening task, not an attack."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-f8c19e92ad3e",
+   "rule_id": "31101",
+   "rule_description": "Web server 400 error code.",
+   "level": 5,
+   "count": 3044,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:00:01+11:00",
+   "last_seen": "2026-11-07T07:58:30+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-8da641dfc9e1",
+   "rule_id": "31101",
+   "rule_description": "Web server 400 error code.",
+   "level": 5,
+   "count": 3005,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T08:00:11+11:00",
+   "last_seen": "2026-11-07T07:58:31+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b9267e027607",
+   "rule_id": "31101",
+   "rule_description": "Web server 400 error code.",
+   "level": 5,
+   "count": 2936,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:00:05+11:00",
+   "last_seen": "2026-11-07T07:58:29+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-5ee687842391",
+   "rule_id": "5710",
+   "rule_description": "sshd: Attempt to login using a non-existent user",
+   "level": 5,
+   "count": 55,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:07:48+11:00",
+   "last_seen": "2026-11-07T07:23:58+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-687dfe19f052",
+   "rule_id": "5710",
+   "rule_description": "sshd: Attempt to login using a non-existent user",
+   "level": 5,
+   "count": 54,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:10:26+11:00",
+   "last_seen": "2026-11-07T07:49:11+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-e195c27de867",
+   "rule_id": "5716",
+   "rule_description": "sshd: authentication failed.",
+   "level": 5,
+   "count": 54,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:20:57+11:00",
+   "last_seen": "2026-11-07T06:24:04+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-e26c77e9be3c",
+   "rule_id": "5710",
+   "rule_description": "sshd: Attempt to login using a non-existent user",
+   "level": 5,
+   "count": 54,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:07:12+11:00",
+   "last_seen": "2026-11-07T06:53:39+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-d3d9ab54650b",
+   "rule_id": "5716",
+   "rule_description": "sshd: authentication failed.",
+   "level": 5,
+   "count": 27,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:41:56+11:00",
+   "last_seen": "2026-11-07T06:10:20+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-564da6a8e81a",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 23,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T08:31:45+11:00",
+   "last_seen": "2026-11-07T06:02:02+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-38af07d52690",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 20,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T09:09:37+11:00",
+   "last_seen": "2026-11-07T07:37:01+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-169b45282916",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 19,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:28:36+11:00",
+   "last_seen": "2026-11-07T06:49:00+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-2c666443c26b",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 19,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:22:25+11:00",
+   "last_seen": "2026-11-07T07:53:17+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-1b1c304c475f",
+   "rule_id": "5716",
+   "rule_description": "sshd: authentication failed.",
+   "level": 5,
+   "count": 17,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:07:35+11:00",
+   "last_seen": "2026-11-07T07:52:10+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-3c447fb5c2b5",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 17,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:31:58+11:00",
+   "last_seen": "2026-11-07T07:19:13+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-8df771991010",
+   "rule_id": "5716",
+   "rule_description": "sshd: authentication failed.",
+   "level": 5,
+   "count": 17,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:10:15+11:00",
+   "last_seen": "2026-11-07T07:42:53+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-915e65da469b",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 14,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:35:04+11:00",
+   "last_seen": "2026-11-07T06:56:07+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-297a0acb9f90",
+   "rule_id": "60122",
+   "rule_description": "Logon Failure - Unknown user or bad password",
+   "level": 5,
+   "count": 13,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T08:32:08+11:00",
+   "last_seen": "2026-11-07T05:02:22+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-6f6c61364595",
+   "rule_id": "554",
+   "rule_description": "File added to the system.",
+   "level": 5,
+   "count": 12,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:22:31+11:00",
+   "last_seen": "2026-11-07T04:30:30+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.8,
+    "tags": [
+     "fim"
+    ],
+    "summary": "New files under application paths during deploy hours."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-1bbbdc2b7b56",
+   "rule_id": "60122",
+   "rule_description": "Logon Failure - Unknown user or bad password",
+   "level": 5,
+   "count": 10,
+   "agents": [
+    "ws-12"
+   ],
+   "first_seen": "2026-11-06T10:28:54+11:00",
+   "last_seen": "2026-11-07T07:51:19+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-e07b75525307",
+   "rule_id": "60122",
+   "rule_description": "Logon Failure - Unknown user or bad password",
+   "level": 5,
+   "count": 7,
+   "agents": [
+    "ws-03"
+   ],
+   "first_seen": "2026-11-06T08:15:12+11:00",
+   "last_seen": "2026-11-07T06:31:38+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-ee999aecaa8f",
+   "rule_id": "60122",
+   "rule_description": "Logon Failure - Unknown user or bad password",
+   "level": 5,
+   "count": 6,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-06T12:18:20+11:00",
+   "last_seen": "2026-11-07T03:56:58+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-5b7d7e216bf8",
+   "rule_id": "60106",
+   "rule_description": "Windows Logon Success",
+   "level": 3,
+   "count": 1551,
+   "agents": [
+    "ws-12"
+   ],
+   "first_seen": "2026-11-06T08:00:20+11:00",
+   "last_seen": "2026-11-07T07:59:36+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-242afbfd4dbe",
+   "rule_id": "60106",
+   "rule_description": "Windows Logon Success",
+   "level": 3,
+   "count": 1515,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T08:00:13+11:00",
+   "last_seen": "2026-11-07T07:58:07+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-96c2965e0cfb",
+   "rule_id": "60106",
+   "rule_description": "Windows Logon Success",
+   "level": 3,
+   "count": 1466,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-06T08:00:06+11:00",
+   "last_seen": "2026-11-07T07:59:55+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-f832987f9fdc",
+   "rule_id": "60106",
+   "rule_description": "Windows Logon Success",
+   "level": 3,
+   "count": 1462,
+   "agents": [
+    "ws-03"
+   ],
+   "first_seen": "2026-11-06T08:00:44+11:00",
+   "last_seen": "2026-11-07T07:57:04+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-26e2b5ff78c0",
+   "rule_id": "60137",
+   "rule_description": "Windows User Logoff",
+   "level": 3,
+   "count": 1039,
+   "agents": [
+    "ws-12"
+   ],
+   "first_seen": "2026-11-06T08:01:04+11:00",
+   "last_seen": "2026-11-07T07:58:51+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.95,
+    "tags": [
+     "authentication"
+    ],
+    "summary": "User logoffs at their usual volume."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-2ab63d2f8aba",
+   "rule_id": "60137",
+   "rule_description": "Windows User Logoff",
+   "level": 3,
+   "count": 1023,
+   "agents": [
+    "ws-03"
+   ],
+   "first_seen": "2026-11-06T08:00:08+11:00",
+   "last_seen": "2026-11-07T07:58:55+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.95,
+    "tags": [
+     "authentication"
+    ],
+    "summary": "User logoffs at their usual volume."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-c2f1d9eb0fe0",
+   "rule_id": "60137",
+   "rule_description": "Windows User Logoff",
+   "level": 3,
+   "count": 1016,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T08:00:07+11:00",
+   "last_seen": "2026-11-07T07:59:13+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.95,
+    "tags": [
+     "authentication"
+    ],
+    "summary": "User logoffs at their usual volume."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-ebe2af37548c",
+   "rule_id": "60137",
+   "rule_description": "Windows User Logoff",
+   "level": 3,
+   "count": 1011,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-06T08:00:07+11:00",
+   "last_seen": "2026-11-07T07:59:32+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "model_requires_review"
+   },
+   "model": {
+    "name": "demo-stub",
+    "verdict": "benign",
+    "confidence": 0.95,
+    "tags": [
+     "authentication"
+    ],
+    "summary": "User logoffs at their usual volume."
+   },
+   "breach_signals": []
+  },
+  {
+   "id": "g-c5c6781b69e8",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 446,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:02:00+11:00",
+   "last_seen": "2026-11-07T07:51:13+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b78d0bf8e8ae",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 438,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T08:03:39+11:00",
+   "last_seen": "2026-11-07T07:58:01+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-41ceb98d688a",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 435,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T08:00:48+11:00",
+   "last_seen": "2026-11-07T07:53:49+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-bc0f4639004a",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 435,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T08:08:02+11:00",
+   "last_seen": "2026-11-07T07:58:41+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-39631ba5ce27",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 433,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:02:30+11:00",
+   "last_seen": "2026-11-07T07:59:00+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b77c6fddb293",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 433,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:01:36+11:00",
+   "last_seen": "2026-11-07T07:59:24+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-6b47a4d80307",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 428,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T08:00:43+11:00",
+   "last_seen": "2026-11-07T07:57:02+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-43fc28a6b8a2",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 419,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:05:00+11:00",
+   "last_seen": "2026-11-07T07:51:58+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-959dd385c33f",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 414,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:01:15+11:00",
+   "last_seen": "2026-11-07T07:58:56+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-6d2e7a7d63ae",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 408,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:02:32+11:00",
+   "last_seen": "2026-11-07T07:55:27+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-b1d22b132495",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 408,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:00:54+11:00",
+   "last_seen": "2026-11-07T07:59:40+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-345a4b0691d6",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 404,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:07:47+11:00",
+   "last_seen": "2026-11-07T07:51:35+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-5a6c7d6bc775",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 403,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T08:03:15+11:00",
+   "last_seen": "2026-11-07T07:50:10+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-cb8e4945340c",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 386,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:00:15+11:00",
+   "last_seen": "2026-11-07T07:59:33+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-f045dae408e7",
+   "rule_id": "5502",
+   "rule_description": "PAM: Login session closed.",
+   "level": 3,
+   "count": 386,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:05:23+11:00",
+   "last_seen": "2026-11-07T07:57:31+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-9fadbe34aef2",
+   "rule_id": "5501",
+   "rule_description": "PAM: Login session opened.",
+   "level": 3,
+   "count": 385,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T08:04:54+11:00",
+   "last_seen": "2026-11-07T07:54:42+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-a4aed1722668",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 25,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:08:19+11:00",
+   "last_seen": "2026-11-07T07:34:50+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-8f5a5a44ee81",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 21,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T09:04:16+11:00",
+   "last_seen": "2026-11-07T07:09:03+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-e10ac946b3fe",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 15,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T09:28:20+11:00",
+   "last_seen": "2026-11-06T22:31:37+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-95f6e50a52b5",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 13,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T09:40:02+11:00",
+   "last_seen": "2026-11-07T07:02:43+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-5f1f603e1b22",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 11,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T10:36:06+11:00",
+   "last_seen": "2026-11-07T05:22:39+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-4c441fa604b6",
+   "rule_id": "5715",
+   "rule_description": "sshd: authentication success.",
+   "level": 3,
+   "count": 9,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T09:31:15+11:00",
+   "last_seen": "2026-11-07T05:53:12+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-219e5d693d19",
+   "rule_id": "5402",
+   "rule_description": "Successful sudo to ROOT executed.",
+   "level": 3,
+   "count": 8,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T09:20:25+11:00",
+   "last_seen": "2026-11-07T07:46:50+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-c9fea3cc25b3",
+   "rule_id": "5715",
+   "rule_description": "sshd: authentication success.",
+   "level": 3,
+   "count": 8,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T09:52:32+11:00",
+   "last_seen": "2026-11-07T06:52:25+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-00d49aae32ac",
+   "rule_id": "61104",
+   "rule_description": "Service startup type was changed",
+   "level": 3,
+   "count": 4,
+   "agents": [
+    "ws-12"
+   ],
+   "first_seen": "2026-11-06T09:49:10+11:00",
+   "last_seen": "2026-11-07T03:12:39+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-4e863f136fac",
+   "rule_id": "61104",
+   "rule_description": "Service startup type was changed",
+   "level": 3,
+   "count": 4,
+   "agents": [
+    "ws-03"
+   ],
+   "first_seen": "2026-11-06T11:39:42+11:00",
+   "last_seen": "2026-11-06T19:40:12+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-d9edbd683b9f",
+   "rule_id": "5715",
+   "rule_description": "sshd: authentication success.",
+   "level": 3,
+   "count": 4,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:47:54+11:00",
+   "last_seen": "2026-11-07T07:12:49+11:00",
+   "category": "recurring",
+   "protected": true,
+   "tuning": "none",
+   "decision": {
+    "delivery_required": true,
+    "health_failure": false,
+    "reason": "protected_indicator"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-eb8d6f562d7c",
+   "rule_id": "61104",
+   "rule_description": "Service startup type was changed",
+   "level": 3,
+   "count": 4,
+   "agents": [
+    "dc-01"
+   ],
+   "first_seen": "2026-11-06T12:50:12+11:00",
+   "last_seen": "2026-11-06T22:06:52+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-92e48e00cdea",
+   "rule_id": "61104",
+   "rule_description": "Service startup type was changed",
+   "level": 3,
+   "count": 3,
+   "agents": [
+    "ws-07"
+   ],
+   "first_seen": "2026-11-06T08:42:55+11:00",
+   "last_seen": "2026-11-06T14:52:16+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "low",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_low"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-a1f266f04a6c",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 37,
+   "agents": [
+    "mail-01"
+   ],
+   "first_seen": "2026-11-06T08:47:58+11:00",
+   "last_seen": "2026-11-07T07:37:58+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-f46588f54f1f",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 36,
+   "agents": [
+    "db-01"
+   ],
+   "first_seen": "2026-11-06T08:30:55+11:00",
+   "last_seen": "2026-11-07T07:57:20+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-baccf5b4804f",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 35,
+   "agents": [
+    "web-02"
+   ],
+   "first_seen": "2026-11-06T08:36:39+11:00",
+   "last_seen": "2026-11-07T07:24:03+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-659ca1489a5a",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 30,
+   "agents": [
+    "proxy-01"
+   ],
+   "first_seen": "2026-11-06T08:11:22+11:00",
+   "last_seen": "2026-11-07T07:57:51+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-7d4d0620c1f9",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 27,
+   "agents": [
+    "web-01"
+   ],
+   "first_seen": "2026-11-06T08:10:40+11:00",
+   "last_seen": "2026-11-07T02:41:56+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-bf4a451f643c",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 27,
+   "agents": [
+    "files-01"
+   ],
+   "first_seen": "2026-11-06T08:50:41+11:00",
+   "last_seen": "2026-11-07T07:22:44+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-27fa6eef8cdf",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 25,
+   "agents": [
+    "build-01"
+   ],
+   "first_seen": "2026-11-06T08:10:21+11:00",
+   "last_seen": "2026-11-07T06:09:17+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  },
+  {
+   "id": "g-cd82ab689ab7",
+   "rule_id": "1002",
+   "rule_description": "Unknown problem somewhere in the system.",
+   "level": 2,
+   "count": 18,
+   "agents": [
+    "vpn-01"
+   ],
+   "first_seen": "2026-11-06T08:23:56+11:00",
+   "last_seen": "2026-11-07T07:44:20+11:00",
+   "category": "recurring",
+   "protected": false,
+   "tuning": "mute",
+   "decision": {
+    "delivery_required": false,
+    "health_failure": false,
+    "reason": "tuned_mute"
+   },
+   "model": null,
+   "breach_signals": []
+  }
+ ],
+ "breaches": [
+  {
+   "name": "brute force then success",
+   "signals": [
+    "brute_force_success"
+   ],
+   "agent": "web-02",
+   "at": "2026-11-07T03:52:02+11:00",
+   "paged": true
+  },
+  {
+   "name": "account created",
+   "signals": [
+    "account_created"
+   ],
+   "agent": "web-02",
+   "at": "2026-11-07T03:58:11+11:00",
+   "paged": true
+  },
+  {
+   "name": "critical file changed",
+   "signals": [
+    "critical_file_change"
+   ],
+   "agent": "web-01",
+   "at": "2026-11-07T04:05:47+11:00",
+   "paged": true
+  }
+ ],
+ "timeline": [
+  {
+   "start": "2026-11-06T08:00:00+11:00",
+   "events": 1550,
+   "delivery_required": 47
+  },
+  {
+   "start": "2026-11-06T09:00:00+11:00",
+   "events": 2100,
+   "delivery_required": 58
+  },
+  {
+   "start": "2026-11-06T10:00:00+11:00",
+   "events": 2169,
+   "delivery_required": 3
+  },
+  {
+   "start": "2026-11-06T11:00:00+11:00",
+   "events": 2043,
+   "delivery_required": 5
+  },
+  {
+   "start": "2026-11-06T12:00:00+11:00",
+   "events": 1835,
+   "delivery_required": 4
+  },
+  {
+   "start": "2026-11-06T13:00:00+11:00",
+   "events": 2101,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T14:00:00+11:00",
+   "events": 2080,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T15:00:00+11:00",
+   "events": 2115,
+   "delivery_required": 2
+  },
+  {
+   "start": "2026-11-06T16:00:00+11:00",
+   "events": 1778,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T17:00:00+11:00",
+   "events": 1340,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T18:00:00+11:00",
+   "events": 1044,
+   "delivery_required": 2
+  },
+  {
+   "start": "2026-11-06T19:00:00+11:00",
+   "events": 786,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T20:00:00+11:00",
+   "events": 774,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T21:00:00+11:00",
+   "events": 499,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T22:00:00+11:00",
+   "events": 841,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-06T23:00:00+11:00",
+   "events": 888,
+   "delivery_required": 2
+  },
+  {
+   "start": "2026-11-07T00:00:00+11:00",
+   "events": 653,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-07T01:00:00+11:00",
+   "events": 648,
+   "delivery_required": 2
+  },
+  {
+   "start": "2026-11-07T02:00:00+11:00",
+   "events": 792,
+   "delivery_required": 1
+  },
+  {
+   "start": "2026-11-07T03:00:00+11:00",
+   "events": 598,
+   "delivery_required": 3
+  },
+  {
+   "start": "2026-11-07T04:00:00+11:00",
+   "events": 260,
+   "delivery_required": 1
+  },
+  {
+   "start": "2026-11-07T05:00:00+11:00",
+   "events": 507,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-07T06:00:00+11:00",
+   "events": 748,
+   "delivery_required": 0
+  },
+  {
+   "start": "2026-11-07T07:00:00+11:00",
+   "events": 1065,
+   "delivery_required": 0
+  }
+ ],
+ "history": [
+  {
+   "start": "2026-11-05T08:00:00+11:00",
+   "end": "2026-11-06T08:00:00+11:00",
+   "events": 26593,
+   "groups": 149,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-11-04T08:00:00+11:00",
+   "end": "2026-11-05T08:00:00+11:00",
+   "events": 27631,
+   "groups": 149,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-11-03T08:00:00+11:00",
+   "end": "2026-11-04T08:00:00+11:00",
+   "events": 26745,
+   "groups": 148,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-11-02T08:00:00+11:00",
+   "end": "2026-11-03T08:00:00+11:00",
+   "events": 27038,
+   "groups": 149,
+   "delivered": true,
+   "health_failure": true
+  },
+  {
+   "start": "2026-11-01T08:00:00+11:00",
+   "end": "2026-11-02T08:00:00+11:00",
+   "events": 26839,
+   "groups": 148,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-10-31T08:00:00+11:00",
+   "end": "2026-11-01T08:00:00+11:00",
+   "events": 26819,
+   "groups": 152,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-10-30T08:00:00+11:00",
+   "end": "2026-10-31T08:00:00+11:00",
+   "events": 26583,
+   "groups": 149,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-10-29T08:00:00+11:00",
+   "end": "2026-10-30T08:00:00+11:00",
+   "events": 27473,
+   "groups": 149,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-10-28T08:00:00+11:00",
+   "end": "2026-10-29T08:00:00+11:00",
+   "events": 26056,
+   "groups": 151,
+   "delivered": true,
+   "health_failure": false
+  },
+  {
+   "start": "2026-10-27T08:00:00+11:00",
+   "end": "2026-10-28T08:00:00+11:00",
+   "events": 27120,
+   "groups": 152,
+   "delivered": true,
+   "health_failure": false
+  }
+ ]
+}

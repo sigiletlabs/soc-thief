@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Soc Thief bounded verification daily
+
+[Timer]
+# The zone must equal SOC_THIEF_TIMEZONE so the run follows the local 08:00 boundary.
+OnCalendar=*-*-* 08:00:00 UTC
+Persistent=true
+RandomizedDelaySec=5m
+Unit=soc-thief.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: Python engine
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install tzdata
+      - run: python -m compileall -q src tests
+      - run: PYTHONPATH=src python -m unittest discover -q
+
+  console:
+    name: Rust console
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: console
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: console
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: private deny-list
+        # The maintainers keep a list of terms that must never be published in a repository
+        # secret. Forks don't get secrets, so this only runs here. It prints file names only.
+        env:
+          DENYLIST: ${{ secrets.SOC_THIEF_DENYLIST }}
+        run: |
+          if [ -z "$DENYLIST" ]; then echo "no deny-list secret; skipped"; exit 0; fi
+          printf '%s\n' "$DENYLIST" | grep -vE '^\s*(#|$)' > "$RUNNER_TEMP/deny"
+          hits=$(git ls-files -z | xargs -0 grep -IliE -f "$RUNNER_TEMP/deny" -- || true)
+          if [ -n "$hits" ]; then echo "deny-list matches in:"; echo "$hits"; exit 1; fi
+          if git log --all -p --format="%an %ae %cn %ce%n%B" | grep -IiE -f "$RUNNER_TEMP/deny" > /dev/null; then
+            echo "deny-list match in git history"; exit 1
+          fi
+          echo "clean"
+      - name: trufflehog over full history
+        run: >
+          docker run --rm -v "$PWD":/repo:ro
+          ghcr.io/trufflesecurity/trufflehog:3.99.8
+          git file:///repo --no-update --fail --results=verified,unknown

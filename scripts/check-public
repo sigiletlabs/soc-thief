@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# Pre-publication check for this repository. Any finding blocks.
+#
+#   scripts/check-public            everything: working tree and full git history
+#   scripts/check-public --staged   quick check of staged changes (pre-commit hook)
+#
+# Checks:
+#   - gitleaks and trufflehog (trufflehog also via podman or docker)
+#   - an optional private deny-list of your own host names, addresses and other terms that
+#     must never be published: one case-insensitive extended regex per line, # for comments.
+#     Keep it outside the repository:
+#       SOC_THIEF_DENYLIST=~/.config/soc-thief/public-denylist.txt (default)
+#   - commit author and committer emails must match SOC_THIEF_ALLOWED_EMAILS (default:
+#     GitHub noreply addresses and @sigiletlabs.com)
+#   - files that must never be tracked (state, secrets, private notes, local snapshots)
+#   - snapshots taken from a real deployment ("source": "state")
+#   - images must be listed in scripts/public-images.sha256, so a screenshot of real data
+#     can't slip in unnoticed
+set -euo pipefail
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+mode=${1:-all}
+failed=0
+ran=0
+note() { printf '[check-public] %s\n' "$*" >&2; }
+fail() { note "$*"; failed=1; }
+
+denylist=${SOC_THIEF_DENYLIST:-$HOME/.config/soc-thief/public-denylist.txt}
+patterns=""
+if [ -r "$denylist" ]; then
+  patterns=$(grep -vE '^\s*(#|$)' "$denylist" || true)
+else
+  note "no deny-list at $denylist; skipped"
+fi
+
+forbidden='(^|/)(STATE\.md|GEMINI\.md|\.env|[^/]*\.sqlite3?(-wal|-shm)?|[^/]*\.(pem|key|p12|pfx)|secrets/.*|data/(?!\.gitkeep$).*)$|^snapshot\.json$|^\.claude/settings\.local\.json$'
+
+if [ "$mode" = "--staged" ]; then
+  # Fast path for every commit: staged content only.
+  if command -v gitleaks >/dev/null; then
+    ran=$((ran + 1))
+    gitleaks git --pre-commit --staged --no-banner --redact --log-level warn . || fail "gitleaks: findings in staged changes"
+  fi
+  if [ -n "$patterns" ]; then
+    ran=$((ran + 1))
+    if git diff --cached -U0 --no-color | grep -E '^\+' | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
+      fail "deny-list: a staged line matches a private term (run scripts/check-public for the location)"
+    fi
+  fi
+  ran=$((ran + 1))
+  bad=$(git diff --cached --name-only --diff-filter=AR | grep -P "$forbidden" || true)
+  [ -z "$bad" ] || fail "forbidden file staged: $bad"
+  [ "$ran" -gt 0 ] || { note "no scanner ran"; exit 2; }
+  [ "$failed" -eq 0 ] || { note "FAILED"; exit 1; }
+  exit 0
+fi
+
+# --- secret scanners -----------------------------------------------------------------------
+if command -v gitleaks >/dev/null; then
+  ran=$((ran + 1))
+  gitleaks git . --no-banner --redact --log-level warn || fail "gitleaks: findings in history"
+  gitleaks dir . --no-banner --redact --log-level warn || fail "gitleaks: findings in working tree"
+else
+  note "gitleaks not installed; skipped"
+fi
+
+th_image=ghcr.io/trufflesecurity/trufflehog:3.99.8
+th_args=(--no-update --fail --results=verified,unknown)
+if command -v trufflehog >/dev/null; then
+  ran=$((ran + 1))
+  trufflehog git "file://$root" "${th_args[@]}" || fail "trufflehog: findings"
+else
+  runtime=$(command -v podman || command -v docker || true)
+  if [ -n "$runtime" ]; then
+    ran=$((ran + 1))
+    "$runtime" run --rm -v "$root":/repo:ro,Z "$th_image" git file:///repo "${th_args[@]}" \
+      || fail "trufflehog: findings"
+  else
+    note "trufflehog not installed and no container runtime; skipped"
+  fi
+fi
+
+# --- private deny-list ---------------------------------------------------------------------
+if [ -n "$patterns" ]; then
+  ran=$((ran + 1))
+  # Tracked files only, so ignored build output doesn't count. Prints file:line, not the match.
+  hits=$(git ls-files -z | xargs -0 grep -IinE -f <(printf '%s\n' "$patterns") -- 2>/dev/null | cut -d: -f1,2 || true)
+  [ -z "$hits" ] || fail "deny-list: private terms at $(echo $hits)"
+  if git log --all -p --format='%an %ae %cn %ce%n%B' | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
+    fail "deny-list: a private term appears in git history or commit metadata"
+  fi
+  if git ls-files | grep -IiE -f <(printf '%s\n' "$patterns") >/dev/null; then
+    fail "deny-list: a private term appears in a file name"
+  fi
+fi
+
+# --- commit identities ---------------------------------------------------------------------
+ran=$((ran + 1))
+emails=$(git log --all --format='%ae%n%ce' | sort -u)
+allowed_emails=${SOC_THIEF_ALLOWED_EMAILS:-'@users\.noreply\.github\.com$|^noreply@github\.com$|@sigiletlabs\.com$'}
+bad_emails=$(printf '%s\n' "$emails" | grep -vE "$allowed_emails" || true)
+[ -z "$bad_emails" ] || fail "commit email not on the allowed list ($allowed_emails); found $(echo "$bad_emails" | wc -l) other address(es)"
+
+# --- files that must never be tracked ------------------------------------------------------
+ran=$((ran + 1))
+bad=$(git ls-files | grep -P "$forbidden" || true)
+[ -z "$bad" ] || fail "forbidden file tracked: $(echo $bad)"
+bad=$(git log --all --format= --name-only --diff-filter=A | sort -u | grep -P "$forbidden" || true)
+[ -z "$bad" ] || fail "forbidden file in history: $(echo $bad)"
+
+# --- snapshots from a real deployment ------------------------------------------------------
+ran=$((ran + 1))
+real=$(git ls-files -z '*.json' | xargs -0 grep -lE '"source"[[:space:]]*:[[:space:]]*"state"' -- 2>/dev/null \
+  | grep -v '^docs/' || true)
+[ -z "$real" ] || fail "snapshot from a real deployment tracked: $(echo $real)"
+
+# --- images must be reviewed ---------------------------------------------------------------
+ran=$((ran + 1))
+manifest=scripts/public-images.sha256
+while IFS= read -r -d '' image; do
+  sum=$(sha256sum "$image" | cut -d' ' -f1)
+  grep -qxF "$sum  $image" "$manifest" 2>/dev/null \
+    || fail "image not in $manifest (review it, then add: sha256sum $image >> $manifest): $image"
+done < <(git ls-files -z '*.png' '*.jpg' '*.jpeg' '*.gif' '*.webp' '*.svg' '*.bmp' '*.ico')
+
+if [ "$ran" -eq 0 ]; then
+  note "no check ran; refusing to call this clean"
+  exit 2
+fi
+if [ "$failed" -ne 0 ]; then
+  note "FAILED"
+  exit 1
+fi
+note "clean ($ran checks)"

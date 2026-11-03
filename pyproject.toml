@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soc-thief"
+version = "0.1.0a1"
+description = "AI-assisted, policy-bounded Wazuh alert triage"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+readme = "README.md"
+# Slim images may lack system zone data; the runner needs the DST rules of SOC_THIEF_TIMEZONE.
+dependencies = ["tzdata==2026.4"]
+
+[project.optional-dependencies]
+mcp = ["mcp==2.3.0"]
+
+[project.scripts]
+soc-thief = "soc_thief.cli:main"
+soc-thief-mcp = "soc_thief.mcp_server:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-q"]

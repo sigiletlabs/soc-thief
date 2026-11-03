@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Create a local, consistent metadata-only SQLite backup."""
+
+from contextlib import closing
+from datetime import datetime, timezone
+import os
+from pathlib import Path
+import sqlite3
+import stat
+import sys
+
+SOURCE = Path("/var/lib/soc-thief/state/state.sqlite3")
+DESTINATION = Path("/var/backups/soc-thief")
+RETENTION_DAYS = 7
+
+
+def _private_directory(path: Path) -> None:
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o077:
+        raise ValueError
+
+
+def main() -> int:
+    try:
+        _private_directory(DESTINATION)
+        source_info = SOURCE.lstat()
+        if (not stat.S_ISREG(source_info.st_mode) or source_info.st_uid != os.geteuid()
+                or source_info.st_mode & 0o077 or source_info.st_nlink != 1):
+            raise ValueError
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        target = DESTINATION / f"state-{stamp}.sqlite3"
+        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        os.close(fd)
+        try:
+            with closing(sqlite3.connect(f"file:{SOURCE}?mode=ro", uri=True)) as source:
+                with closing(sqlite3.connect(target)) as destination:
+                    source.backup(destination)
+                    if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
+                        raise ValueError
+        except BaseException:
+            target.unlink(missing_ok=True)
+            raise
+        cutoff = datetime.now(timezone.utc).timestamp() - RETENTION_DAYS * 86400
+        for candidate in DESTINATION.glob("state-*.sqlite3"):
+            info = candidate.lstat()
+            if (stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                    and not info.st_mode & 0o077 and info.st_mtime < cutoff):
+                candidate.unlink()
+        print("Soc Thief metadata backup completed.")
+        return 0
+    except (OSError, sqlite3.Error, ValueError):
+        print("Soc Thief metadata backup failed; review required.", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

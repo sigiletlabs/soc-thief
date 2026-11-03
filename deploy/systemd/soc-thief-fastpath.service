@@ -1,0 +1,100 @@
+[Unit]
+Description=Soc Thief breach fast path: page through ntfy on a breach signal
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/soc-thief/enable-fastpath
+
+[Service]
+Type=oneshot
+User=soc-thief
+Group=soc-thief
+WorkingDirectory=/var/lib/soc-thief
+EnvironmentFile=/etc/soc-thief/environment
+LoadCredential=wazuh_indexer_url:/etc/soc-thief/secrets/wazuh_indexer_url
+LoadCredential=wazuh_indexer_username:/etc/soc-thief/secrets/wazuh_indexer_username
+LoadCredential=wazuh_indexer_password:/etc/soc-thief/secrets/wazuh_indexer_password
+LoadCredential=wazuh_indexer_ca:/etc/soc-thief/secrets/wazuh_indexer_ca
+LoadCredential=ntfy:/etc/soc-thief/secrets/ntfy
+LoadCredential=identity_key:/etc/soc-thief/secrets/identity_key
+LoadCredential=runner_approval:/etc/soc-thief/secrets/runner_approval
+LoadCredential=agent_inventory:/etc/soc-thief/secrets/agent_inventory
+RuntimeDirectory=soc-thief
+RuntimeDirectory=soc-thief/fastpath
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+StateDirectory=soc-thief soc-thief/fastpath
+StateDirectoryMode=0700
+Environment=XDG_RUNTIME_DIR=/run/soc-thief/fastpath
+# Report timezone, an IANA name: the 08:00-to-08:00 report day and every local time shown.
+# /etc/soc-thief/environment overrides this default. Keep the timers' OnCalendar zone equal to it.
+Environment=SOC_THIEF_TIMEZONE=UTC
+# ntfy host entry: public DNS cannot resolve a tailnet name, so the container gets a
+# fixed hosts entry. These harmless defaults are overridden by /etc/soc-thief/environment
+# (EnvironmentFile= takes precedence over Environment=), so a unit installed before ntfy is
+# configured still starts.
+Environment=SOC_THIEF_NTFY_ALIAS=ntfy.invalid
+Environment=SOC_THIEF_NTFY_ADDR=127.0.0.1
+# Empty by default so systemd does not warn on every run; the environment file sets it.
+Environment=SOC_THIEF_FASTPATH_MODEL_BASE_URL=
+# Trusted RMM tools for the follow-up's "RMM possible" question; empty means none. Comma-
+# separated names or process/path markers; set it in /etc/soc-thief/environment, quoted if it
+# contains spaces or backslashes. ${...} passes it to podman as one argument.
+Environment=SOC_THIEF_RMM_MARKERS=
+ExecStart=/usr/bin/podman --root /var/lib/soc-thief/podman-fastpath --runroot /run/soc-thief/fastpath/podman --storage-opt additionalimagestore=/var/lib/soc-thief/podman run --pull=never --rm --replace --name soc-thief-fastpath --read-only --cap-drop=ALL --security-opt=no-new-privileges --userns=keep-id:uid=65532,gid=65532 --network pasta:-T,${SOC_THIEF_INDEXER_PORT},-T,${SOC_THIEF_MODEL_PORT} --add-host ${SOC_THIEF_INDEXER_ALIAS}:127.0.0.1 --add-host ${SOC_THIEF_NTFY_ALIAS}:${SOC_THIEF_NTFY_ADDR} --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --volume /var/lib/soc-thief/fastpath:/var/lib/soc-thief/fastpath:Z --mount type=bind,src=%d,dst=/run/secrets,ro=true,relabel=private --env WAZUH_INDEXER_URL_FILE=/run/secrets/wazuh_indexer_url --env WAZUH_INDEXER_USERNAME_FILE=/run/secrets/wazuh_indexer_username --env WAZUH_INDEXER_PASSWORD_FILE=/run/secrets/wazuh_indexer_password --env WAZUH_INDEXER_CA_FILE=/run/secrets/wazuh_indexer_ca --env SOC_THIEF_NTFY_FILE=/run/secrets/ntfy --env SOC_THIEF_IDENTITY_KEY_FILE=/run/secrets/identity_key --env SOC_THIEF_RUNNER_APPROVAL_FILE=/run/secrets/runner_approval --env SOC_THIEF_AGENT_INVENTORY_FILE=/run/secrets/agent_inventory --env MODEL_BASE_URL=${SOC_THIEF_FASTPATH_MODEL_BASE_URL} --env MODEL_NAME=qwen3:4b --env MODEL_TIMEOUT_SECONDS=30 --env STATE_PATH=/var/lib/soc-thief/fastpath --env SOC_THIEF_TIMEZONE=${SOC_THIEF_TIMEZONE} --env SOC_THIEF_RMM_MARKERS=${SOC_THIEF_RMM_MARKERS} --entrypoint python ${SOC_THIEF_IMAGE} -m soc_thief.fastpath
+PrivateTmp=yes
+PrivateDevices=yes
+BindPaths=/dev/net/tun
+DeviceAllow=/dev/net/tun rw
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+UMask=0077
+ReadWritePaths=/var/lib/soc-thief /run/soc-thief
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=soc-thief-fastpath
+TimeoutStartSec=570s
+TimeoutStopSec=15s
+KillMode=control-group
+
+# Enabling needs three operator decisions: the ntfy topic and token
+# (/etc/soc-thief/secrets/ntfy, mode 0600: {"url": "https://<host>/<topic>", "token": "tk_..."}),
+# an egress allowance in the host nft policy for that one ntfy host, and the enable-fastpath
+# marker. The runner approval gates this unit too: deleting it stops every page.
+# No model, no tuning and no Discord before the page: a breach signal pages whatever tuning says.
+# The unit takes no priority lock, so a daily run does not delay a page; it reads one short window
+# and keeps its own state file in /var/lib/soc-thief/fastpath, away from the runner's state lock.
+# The container mounts only that directory, never the runner state or its database.
+# Follow-up investigation is optional: SOC_THIEF_FASTPATH_MODEL_BASE_URL in
+# /etc/soc-thief/environment (e.g. http://127.0.0.1:11434, the same loopback Ollama the runner
+# uses through the SOC_THIEF_MODEL_PORT forward). Unset or empty, no follow-up is sent and no model
+# or search request is made. It runs only after the pages are sent and the checkpoint saved, and
+# only inside the 300s deadline.
+# Agent liveness needs a fourth decision: the expected-agent inventory
+# (/etc/soc-thief/secrets/agent_inventory, mode 0600:
+# {"version": 1, "agents": [{"agent_id": "001", "max_silence_minutes": 180}]}). A missing or
+# invalid inventory fails every run closed, which the status check turns into a missed heartbeat.
+# Timeout: fast path deadline 300s (investigation included) plus two ntfy attempts and container
+# start/stop = 420s; one combined "skipped" follow-up after the deadline = 450s; the agent liveness
+# read (three 30s attempts with backoff) and its pages add 120s = 570s.
+# Own Podman store and runtime directory. Rootless Podman runs every command in one
+# user and mount namespace per store: it joins the pause process named under XDG_RUNTIME_DIR, or a
+# running container's conmon from its database. That namespace belongs to whichever unit started
+# first, and systemd mounts /run/credentials/<unit> only inside that unit's namespace. So with a
+# shared store, a fast path starting during the daily run failed with "statfs
+# /run/credentials/soc-thief-fastpath.service: no such file or directory" (seen
+# repeatedly on the deployment host), and a runner starting during a fast path run would fail the
+# same way. A separate XDG_RUNTIME_DIR alone is not enough, because of the conmon join; a separate
+# --root/--runroot is. The image is read from the runner's store as a read-only additional image
+# store, so the deploy builds once and SOC_THIEF_IMAGE's digest resolves in both. Reproduced and
+# verified on Ubuntu 24.04 with Podman 4.9.3 and systemd 255, the versions on the deployment host.
+# Hardening and the shared RuntimeDirectory follow the runner unit; see the comments there.

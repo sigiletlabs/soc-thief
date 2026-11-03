@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Soc Thief runner health hourly
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=false
+Unit=soc-thief-status.service
+
+[Install]
+WantedBy=timers.target

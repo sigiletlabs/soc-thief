@@ -1,0 +1,42 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# Runtime state and alert material
+data/*
+!data/.gitkeep
+var/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+alerts/
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Agent and graph output
+graphify-out/
+
+# Rust console
+console/target/
+# Local snapshots (examples/ holds the synthetic demo one)
+/snapshot.json
+
+# Local agent settings
+.claude/settings.local.json
