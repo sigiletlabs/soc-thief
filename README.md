@@ -75,12 +75,9 @@ host. Run it on a test machine first.
 It's alpha, so try it on a lab first. It has been running on a small real network since
 September 2026, delivering the daily digest and paging on breaches.
 
-- 587 Python tests and 35 Rust tests run on every push. Some exist only to fail if anyone ever
+- 593 Python tests and 35 Rust tests run on every push. Some exist only to fail if anyone ever
   lets a model hold back an alert.
 - The safety rules live in one small policy module that you can read in a few minutes.
-- What isn't proven yet: how accurate the model's advice is. A labelled comparison couldn't
-  rank the models, because every group in the sample turned out to be routine. That's why the
-  model only advises, and the [roadmap](ROADMAP.md) puts measuring it first.
 
 ## What it does
 
@@ -172,7 +169,7 @@ This is an alpha, and I'd like to hear what breaks. Run the demo, point it at yo
 and [open an issue](https://github.com/sigiletlabs/soc-thief/issues/new/choose) with what you
 found. Please never put real alerts, host names or addresses in an issue.
 
-The [roadmap](ROADMAP.md) has what comes next: measuring how good the model's advice really is,
+The [roadmap](ROADMAP.md) has what comes next: scoring each model backend against labelled alerts,
 moving the engine to Rust, and letting agents take actions that a person approves. Pull requests
 are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
