@@ -49,8 +49,9 @@ soc-thief --snapshot snapshot.json
 ```
 
 `digest.txt` is the Discord message it would have sent you. `soc-thief` prints the overview an
-agent or a person would start from. To see it the way the GIF does, build the console (you need
-Rust):
+agent or a person would start from. To see it the way the GIF does, download the console for
+Linux, macOS or Windows from the [latest release](https://github.com/sigiletlabs/soc-thief/releases)
+and run `soc-thief-console tui --snapshot snapshot.json`, or build it yourself with Rust:
 
 ```sh
 cd console && cargo build --release && cd ..

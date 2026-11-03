@@ -3,7 +3,7 @@
 Soc Thief is alpha software. Settings, file formats and command names may change between
 releases. Breaking changes are listed here.
 
-## 0.1.0-alpha.1 (2026-11-07)
+## 0.1.0-alpha.1 (2026-11-03)
 
 First public release.
 

@@ -1,0 +1,126 @@
+name: release
+
+# Push a tag such as v0.1.0-alpha.1. This creates a draft pre-release, builds the console for
+# each platform and the Python wheel, uploads them with a SHA256SUMS file, then publishes.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # The changelog heading uses the version without the "v", e.g. "## 0.1.0-alpha.1 (date)".
+          awk -v v="$version" '$0 ~ "^## "v"( |$)" {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
+      - name: Create draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --prerelease \
+            --title "Soc Thief $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+
+  console:
+    name: Console (${{ matrix.target }})
+    needs: draft
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl }
+          - { os: macos-latest, target: aarch64-apple-darwin }
+          - { os: macos-latest, target: x86_64-apple-darwin }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: musl tools
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update -q && sudo apt-get install -y -q musl-tools
+      - name: Build
+        working-directory: console
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package
+        run: |
+          name="soc-thief-console-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          mkdir "$name"
+          bin=console/target/${{ matrix.target }}/release/soc-thief-console
+          [ -f "$bin.exe" ] && bin="$bin.exe"
+          cp "$bin" LICENSE "$name/"
+          cp console/README.md "$name/README.md"
+          cp examples/demo-snapshot.json "$name/"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a -tzip "$name.zip" "$name" > /dev/null
+            echo "ASSET=$name.zip" >> "$GITHUB_ENV"
+          else
+            tar -czf "$name.tar.gz" "$name"
+            echo "ASSET=$name.tar.gz" >> "$GITHUB_ENV"
+          fi
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" "$ASSET" --repo "$GITHUB_REPOSITORY"
+
+  wheel:
+    name: Python wheel
+    needs: draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Build and upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m pip wheel . --no-deps --wheel-dir dist
+          gh release upload "$GITHUB_REF_NAME" dist/*.whl --repo "$GITHUB_REPOSITORY"
+
+  publish:
+    name: Checksums and publish
+    needs: [console, wheel]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: SHA256SUMS
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir assets && cd assets
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY"
+          sha256sum * > ../SHA256SUMS
+          cd .. && cat SHA256SUMS
+          gh release upload "$GITHUB_REF_NAME" SHA256SUMS --repo "$GITHUB_REPOSITORY"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
