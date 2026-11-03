@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import multiprocessing
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 from soc_thief.collector import CollectorConfig, WazuhIndexerCollector
@@ -58,15 +58,22 @@ def _run_worker(start: datetime, end: datetime, *, snapshot: bool = False,
                 process.close()
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     parser = _Parser(description=__doc__)
-    parser.add_argument("--start", required=True, help="Timezone-aware ISO timestamp (inclusive)")
-    parser.add_argument("--end", required=True, help="Timezone-aware ISO timestamp (exclusive)")
+    parser.add_argument("--start", help="Timezone-aware ISO timestamp (inclusive); default: the last full hour")
+    parser.add_argument("--end", help="Timezone-aware ISO timestamp (exclusive); default: the last full hour")
     parser.add_argument("--snapshot", action="store_true",
                         help="Use and release one point-in-time snapshot for both metadata pages")
     args = parser.parse_args(argv)
     try:
-        start, end = datetime.fromisoformat(args.start), datetime.fromisoformat(args.end)
+        if args.start is None and args.end is None:
+            # The scheduled unit passes no window: check the last full UTC hour.
+            end = (now or datetime.now(timezone.utc)).replace(minute=0, second=0, microsecond=0)
+            start = end - timedelta(hours=1)
+        elif args.start is None or args.end is None:
+            raise ValueError
+        else:
+            start, end = datetime.fromisoformat(args.start), datetime.fromisoformat(args.end)
         if (start.utcoffset() is None or end.utcoffset() is None
                 or not timedelta(0) < end - start <= timedelta(hours=1)):
             raise ValueError

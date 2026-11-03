@@ -9,7 +9,7 @@ import tempfile
 import time
 import unittest
 from dataclasses import replace
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -145,6 +145,24 @@ class VerifyTest(unittest.TestCase):
         worker.assert_called_once_with(START, END, snapshot=True)
         self.assertEqual(output.getvalue(),
                          "Snapshot metadata pagination verified; no source fields requested. Deployment gates remain open.\n")
+
+    def test_no_window_defaults_to_the_last_full_hour(self):
+        now = datetime(2026, 11, 7, 3, 52, 2, tzinfo=timezone.utc)
+        with contextlib.redirect_stdout(io.StringIO()), patch("soc_thief.verify._run_worker", return_value=0) as worker:
+            self.assertEqual(main([], now=now), 0)
+        worker.assert_called_once_with(datetime(2026, 11, 7, 2, tzinfo=timezone.utc),
+                                       datetime(2026, 11, 7, 3, tzinfo=timezone.utc), snapshot=False)
+
+    def test_no_window_uses_the_real_clock(self):
+        with contextlib.redirect_stdout(io.StringIO()), patch("soc_thief.verify._run_worker", return_value=0) as worker:
+            self.assertEqual(main([]), 0)
+        start, end = worker.call_args.args
+        self.assertEqual((end - start, end.minute, end.second), (timedelta(hours=1), 0, 0))
+
+    def test_half_a_window_is_refused(self):
+        with contextlib.redirect_stdout(io.StringIO()), patch("soc_thief.verify._run_worker") as worker:
+            self.assertEqual(main(["--start", START.isoformat()]), 1)
+        worker.assert_not_called()
 
     def test_worker_hides_unexpected_error(self):
         output = io.StringIO()

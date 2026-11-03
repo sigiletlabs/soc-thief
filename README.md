@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="docs/images/web-overview.png" alt="Soc Thief web console showing a demo night: 29,214 events, 161 groups and three paged breaches" width="100%">
-</p>
+<h1 align="center">SOC THIEF</h1>
+
+<p align="center"><b>Sleep through the night. Soc Thief reads your Wazuh alerts and only wakes you for a breach.</b></p>
 
 <p align="center">
   <a href="https://github.com/sigiletlabs/soc-thief/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/sigiletlabs/soc-thief/ci.yml?branch=main&style=flat-square&label=ci" alt="CI"></a>
@@ -10,28 +10,33 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/sigiletlabs/soc-thief?style=flat-square" alt="Licence: Apache-2.0"></a>
 </p>
 
-## Overnight triage for Wazuh alerts
+Somewhere in last night's Wazuh alerts is the one that matters. If you run Wazuh for a small
+network, a home lab or a handful of clients, you already know nobody reads them all.
 
-Wazuh produces far more alerts than one person can read. Soc Thief reads a night's worth,
-groups and de-duplicates them, and sends you one Discord digest in the morning. What changed
-goes at the top and everything else goes in an attached file. If something looks like a
-breach, it pages you through ntfy within about ten minutes instead of waiting for the morning.
+**Soc Thief reads them for you.** In the morning you get one Discord message: what's new, what's
+spiking and what broke, with everything else in an attached file. The only thing you have to
+read is that message over coffee. If a brute-force run turns into a successful login at 3:52 am,
+your phone goes off within ten minutes instead.
 
-A local AI model looks at each group and gives advice. It can't hide anything. Whether an alert
-reaches you is decided by fixed rules and by a tuning file you write yourself. Alerts about
+**The AI never gets a vote on what you don't see.** A local model reads each group of alerts and
+gives its opinion. Fixed rules and a tuning file you write decide what reaches you. Alerts about
 malware, privilege escalation, authentication abuse and critical events can't be tuned away at
-all.
+all. A model that's wrong, slow or fooled by a hostile alert can only make Soc Thief send you
+more.
 
-Soc Thief is alpha software. It has been running on a small real network since September
-2026, but settings and formats will still change.
+<p align="center">
+  <a href="#try-it-in-a-minute"><b>Try the demo in a minute</b></a> ·
+  <a href="docs/AGENT_SETUP.md"><b>Set it up with your AI agent</b></a> ·
+  <a href="docs/POLICY.md"><b>See how it decides</b></a>
+</p>
 
-![The terminal console stepping through groups, health and history](docs/images/tui.gif)
+![The terminal console stepping through a demo night: overview, alert groups, a protected malware group that tuning can't hide, health and history](docs/images/tui.gif)
 
-## Try it without Wazuh
+## Try it in a minute
 
-The demo makes up a night of alerts and runs them through the real pipeline: grouping, policy,
-tuning, breach detection and the digest. It needs no network and no credentials, and every host
-name and address in it is made up.
+No Wazuh needed. The demo makes up a night of alerts (29,214 events with three breaches hidden in them) and
+runs them through the real pipeline: grouping, policy, tuning, breach detection and the digest.
+It needs no network and no credentials, and every host name and address in it is invented.
 
 ```sh
 git clone https://github.com/sigiletlabs/soc-thief
@@ -40,10 +45,12 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -e .
 
 python -m soc_thief.demo --out snapshot.json --digest-out digest.txt
+soc-thief --snapshot snapshot.json
 ```
 
-`digest.txt` is the Discord message it would have sent. To look at the rest, build the
-console (you need Rust):
+`digest.txt` is the Discord message it would have sent you. `soc-thief` prints the overview an
+agent or a person would start from. To see it the way the GIF does, build the console (you need
+Rust):
 
 ```sh
 cd console && cargo build --release && cd ..
@@ -54,6 +61,26 @@ console/target/release/soc-thief-console web    # at http://127.0.0.1:8787
 Both read `snapshot.json` and redraw when it changes. A ready-made one is in
 `examples/demo-snapshot.json`. Times are in UTC unless you set `SOC_THIEF_TIMEZONE`, for example
 `SOC_THIEF_TIMEZONE=Australia/Sydney`.
+
+## Set it up with your AI agent
+
+[docs/AGENT_SETUP.md](docs/AGENT_SETUP.md) is a prompt you paste into Claude Code, Codex or any
+coding agent. It asks you what you've got, then walks the agent through connecting Soc Thief to
+an existing Wazuh, or standing up a lab Wazuh first. It follows the deployment guide step by
+step and stops to ask before anything risky, such as firewall rules, timers or a production
+host. Run it on a test machine first.
+
+## Is it real?
+
+It's alpha, so try it on a lab first. It has been running on a small real network since
+September 2026, delivering the daily digest and paging on breaches.
+
+- 587 Python tests and 35 Rust tests run on every push. Some exist only to fail if anyone ever
+  lets a model hold back an alert.
+- The safety rules live in one small policy module that you can read in a few minutes.
+- What isn't proven yet: how accurate the model's advice is. A labelled comparison couldn't
+  rank the models, because every group in the sample turned out to be routine. That's why the
+  model only advises, and the [roadmap](ROADMAP.md) puts measuring it first.
 
 ## What it does
 
@@ -94,7 +121,10 @@ summaries to a model that isn't on your machine needs an explicit setting. See
 
 ## The console
 
-![The web console's group list with one group opened](docs/images/web-groups.png)
+<p align="center">
+  <img src="docs/images/web-overview.png" alt="Web console overview of the demo night: event counts, an hourly chart and three paged breaches" width="49%">
+  <img src="docs/images/web-groups.png" alt="Web console group list with one group opened, showing the policy decision and the model's advice" width="49%">
+</p>
 
 `soc-thief-console` is a small Rust program with a terminal view and a web view. It only reads
 a snapshot file. It makes no network connections of its own, and the web view only listens on
@@ -138,10 +168,13 @@ Other docs:
 
 ## Status and contributing
 
-This is an alpha. The [roadmap](ROADMAP.md) has what comes next, starting with moving the
-engine to Rust and letting agents take actions that a person approves.
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first, and please never
-put real alerts, host names or addresses in an issue.
+This is an alpha, and I'd like to hear what breaks. Run the demo, point it at your own Wazuh,
+and [open an issue](https://github.com/sigiletlabs/soc-thief/issues/new/choose) with what you
+found. Please never put real alerts, host names or addresses in an issue.
+
+The [roadmap](ROADMAP.md) has what comes next: measuring how good the model's advice really is,
+moving the engine to Rust, and letting agents take actions that a person approves. Pull requests
+are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 Report security problems privately, as described in [SECURITY.md](SECURITY.md).
 

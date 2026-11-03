@@ -19,24 +19,24 @@ Backspace 52
 Type "./soc-thief-console tui --snapshot demo-snapshot.json"
 Enter
 Show
-Sleep 3.5s
+Sleep 6s
 Type "2"
-Sleep 2s
+Sleep 4s
 Down 2
-Sleep 800ms
+Sleep 2s
 Enter
-Sleep 3.5s
+Sleep 7s
 Escape
-Sleep 500ms
-Type "c"
-Sleep 1.2s
-Type "c"
 Sleep 2s
+Type "c"
+Sleep 3s
+Type "c"
+Sleep 4s
 Type "3"
-Sleep 2.5s
+Sleep 5s
 Type "4"
-Sleep 2.5s
+Sleep 5s
 Type "1"
-Sleep 2s
+Sleep 4s
 Type "q"
 Sleep 300ms
