@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "soc-thief"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "AI-assisted, policy-bounded Wazuh alert triage"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }

@@ -82,7 +82,7 @@ host. Run it on a test machine first.
 It's alpha, so try it on a lab first. It has been running on a small real network since
 September 2026, delivering the daily digest and paging on breaches.
 
-- 593 Python tests and 35 Rust tests run on every push. Some exist only to fail if anyone ever
+- 631 Python tests and 49 Rust tests run on every push. Some exist only to fail if anyone ever
   lets a model hold back an alert.
 - The safety rules live in one small policy module that you can read in a few minutes.
 

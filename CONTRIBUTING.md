@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are welcome. Soc Thief is alpha software (0.1.0-alpha.1), so interfaces, settings and
+Contributions are welcome. Soc Thief is alpha software (0.1.0-alpha.2), so interfaces, settings and
 file formats may still change. That also means there is plenty to do.
 
 ## Proposing a change

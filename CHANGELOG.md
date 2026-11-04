@@ -3,7 +3,7 @@
 Soc Thief is alpha software. Settings, file formats and command names may change between
 releases. Breaking changes are listed here.
 
-## Unreleased
+## 0.1.0-alpha.2 (2026-11-04)
 
 - Console: a globe view (`5 GLOBE`) that replays a window's attacks as arcs from each source
   country to home, coloured by what policy did with them. Press `m` to hide what tuning muted.
