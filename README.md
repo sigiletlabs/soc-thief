@@ -32,6 +32,12 @@ more.
 
 ![The terminal console stepping through a demo night: overview, alert groups, a protected malware group that tuning can't hide, health and history](docs/images/tui.gif)
 
+Press `5` in the console and the night's alerts fly at home from the countries they came from.
+Press `m` and the tuned-out noise disappears, so you can see how little of it reaches your digest.
+Red is a breach, and a breach pages you.
+
+![The console's globe view: a rotating terminal globe, locked on Australia, with attack arcs flying in from other countries and a red breach banner at the end](docs/images/globe.gif)
+
 ## Try it in a minute
 
 No Wazuh needed. The demo makes up a night of alerts (29,214 events with three breaches hidden in them) and

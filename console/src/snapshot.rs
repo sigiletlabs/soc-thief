@@ -26,6 +26,7 @@ pub const CAP_TAGS: usize = 16;
 pub const CAP_LIST: usize = 200;
 pub const CAP_TIMELINE: usize = 24 * 31;
 pub const CAP_HISTORY: usize = 30;
+pub const CAP_SHOTS: usize = 20_000;
 
 fn nd<'de, D, T>(d: D) -> Result<T, D::Error>
 where
@@ -152,6 +153,69 @@ pub struct Snapshot {
     pub timeline: Vec<Bucket>,
     #[serde(default, deserialize_with = "nd")]
     pub history: Vec<HistoryRow>,
+    /// Optional (schema 1.1): the globe view's attack shots.
+    #[serde(default)]
+    pub attacks: Option<Attacks>,
+}
+
+/// What policy made of one shot.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ShotKind {
+    Tuned,
+    Reported,
+    Breach,
+    #[default]
+    #[serde(other)]
+    Unknown,
+}
+
+impl ShotKind {
+    /// An unknown kind is drawn as reported, so a strange value never hides a shot.
+    pub fn shown(self) -> ShotKind {
+        if self == ShotKind::Unknown {
+            ShotKind::Reported
+        } else {
+            self
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Attacks {
+    #[serde(default, deserialize_with = "nd")]
+    pub home: String,
+    #[serde(default, deserialize_with = "nd")]
+    pub start: String,
+    #[serde(default, deserialize_with = "nd")]
+    pub end: String,
+    #[serde(default, deserialize_with = "nd")]
+    pub no_source: u64,
+    #[serde(default, deserialize_with = "nd")]
+    pub dropped: u64,
+    #[serde(default, deserialize_with = "nd")]
+    pub shots: Vec<Shot>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Shot {
+    /// Seconds after `attacks.start`.
+    #[serde(default, deserialize_with = "nd")]
+    pub t: f64,
+    #[serde(default, deserialize_with = "nd")]
+    pub country: String,
+    #[serde(default, deserialize_with = "nd")]
+    pub level: u32,
+    #[serde(default, deserialize_with = "nd")]
+    pub kind: ShotKind,
+    #[serde(default, deserialize_with = "nd")]
+    pub label: String,
+}
+
+/// A country code is two ASCII capitals, or `LAN`; anything else becomes empty (no arc).
+fn country_code(value: &str) -> String {
+    let ok = (value.len() == 2 || value == "LAN") && value.bytes().all(|b| b.is_ascii_uppercase());
+    if ok { value.to_string() } else { String::new() }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -489,6 +553,19 @@ impl Snapshot {
             clean(&mut h.start, CAP_SHORT);
             clean(&mut h.end, CAP_SHORT);
         }
+
+        if let Some(a) = &mut self.attacks {
+            a.home = country_code(&a.home);
+            clean(&mut a.start, CAP_SHORT);
+            clean(&mut a.end, CAP_SHORT);
+            a.shots.truncate(CAP_SHOTS);
+            a.shots.retain(|s| s.t.is_finite() && s.t >= 0.0);
+            for s in &mut a.shots {
+                s.country = country_code(&s.country);
+                clean(&mut s.label, CAP_SHORT);
+            }
+            a.shots.sort_by(|x, y| x.t.total_cmp(&y.t));
+        }
     }
 
     /// `Some((listed, total))` when the snapshot lists fewer groups than the window had.
@@ -642,6 +719,41 @@ mod tests {
         assert_eq!(s.health.status, Status::Unknown);
         assert_eq!(s.groups[0].category, Category::Unknown);
         assert_eq!(s.groups[0].tuning, Tuning::Unknown);
+    }
+
+    #[test]
+    fn attacks_are_optional_and_sanitised() {
+        assert!(
+            parse(br#"{"schema": "soc-thief.snapshot/1"}"#)
+                .unwrap()
+                .attacks
+                .is_none()
+        );
+        let doc =
+            "{\"schema\": \"soc-thief.snapshot/1.1\", \"attacks\": {\"home\": \"au\", \"shots\": [
+            {\"t\": 9, \"country\": \"CN\", \"kind\": \"breach\", \"label\": \"a\\u001b[31mb\"},
+            {\"t\": -1, \"country\": \"US\"},
+            {\"t\": 2, \"country\": \"LAN\", \"kind\": \"zap\"},
+            {\"t\": 1, \"country\": \"C\u{202e}N\"},
+            {\"t\": 3, \"country\": \"USA\", \"kind\": \"tuned\"}]}}";
+        let a = parse(doc.as_bytes()).unwrap().attacks.unwrap();
+        assert_eq!(a.home, "", "lower case is not a code");
+        let seen: Vec<(f64, &str, ShotKind)> = a
+            .shots
+            .iter()
+            .map(|s| (s.t, s.country.as_str(), s.kind))
+            .collect();
+        assert_eq!(
+            seen,
+            [
+                (1.0, "", ShotKind::Unknown),
+                (2.0, "LAN", ShotKind::Unknown),
+                (3.0, "", ShotKind::Tuned),
+                (9.0, "CN", ShotKind::Breach),
+            ]
+        );
+        assert!(!a.shots[3].label.contains('\u{1b}'));
+        assert_eq!(ShotKind::Unknown.shown(), ShotKind::Reported);
     }
 
     #[test]

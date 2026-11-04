@@ -44,8 +44,9 @@ def validate(test, document, *, source):
     """Every field docs/SNAPSHOT.md names, with its type and closed vocabulary."""
     text = json.dumps(document, ensure_ascii=False)
     test.assertLessEqual(len(text.encode()), 8 * 1024 * 1024)
-    _keys(test, document, ("schema", "generated_at", "source", "timezone", "window", "health", "groups",
-                           "breaches", "timeline", "history"))
+    required = ("schema", "generated_at", "source", "timezone", "window", "health", "groups",
+                "breaches", "timeline", "history")
+    _keys(test, document, required + (("attacks",) if "attacks" in document else ()))
     test.assertRegex(document["schema"], r"^soc-thief\.snapshot/1(\.\d+)?$")
     test.assertEqual(document["source"], source)
     _time(test, document["generated_at"])
@@ -120,8 +121,34 @@ def validate(test, document, *, source):
         previous = start
         test.assertIs(type(row["delivered"]), bool)
         test.assertIs(type(row["health_failure"]), bool)
+    if "attacks" in document:
+        validate_attacks(test, document["attacks"], window)
     for forbidden in ("webhook", "/api/webhooks/", "password=", "token="):
         test.assertNotIn(forbidden, text.lower())
+
+
+def validate_attacks(test, attacks, window):
+    """The optional globe block: countries and kinds only, never an address or a host."""
+    _keys(test, attacks, ("home", "start", "end", "no_source", "dropped", "shots"))
+    test.assertRegex(attacks["home"], r"^[A-Z]{2}$")
+    test.assertEqual((attacks["start"], attacks["end"]), (window["start"], window["end"]))
+    span = (_time(test, attacks["end"]) - _time(test, attacks["start"])).total_seconds()
+    for name in ("no_source", "dropped"):
+        test.assertIs(type(attacks[name]), int)
+        test.assertGreaterEqual(attacks[name], 0)
+    test.assertLessEqual(len(attacks["shots"]), 20000)
+    times = []
+    for shot in attacks["shots"]:
+        _keys(test, shot, ("t", "country", "level", "kind", "label"))
+        test.assertIsInstance(shot["t"], (int, float))
+        test.assertTrue(0 <= shot["t"] <= span, shot)
+        times.append(shot["t"])
+        test.assertRegex(shot["country"], r"^([A-Z]{2}|LAN)$")
+        test.assertIs(type(shot["level"]), int)
+        test.assertIn(shot["kind"], ("tuned", "reported", "breach"))
+        test.assertIsInstance(shot["label"], str)
+        test.assertLessEqual(len(shot["label"]), 48)
+    test.assertEqual(times, sorted(times), "shots are not oldest first")
 
 
 def _sydney():
@@ -183,6 +210,15 @@ class DemoSnapshotTest(unittest.TestCase):
         self.assertGreater(self.snap["window"]["muted_by_tuning"], 0)
         self.assertEqual(self.snap["health"]["status"], "attention")
         self.assertIsNotNone(self.digest.attachment)
+
+    def test_globe_replays_the_demo_breaches_at_their_times(self):
+        attacks = self.snap["attacks"]
+        self.assertEqual(attacks["home"], "AU")
+        start = datetime.fromisoformat(self.snap["window"]["start"])
+        expected = sorted(round((datetime.fromisoformat(b["at"]) - start).total_seconds(), 1)
+                          for b in self.snap["breaches"])
+        self.assertEqual([shot["t"] for shot in attacks["shots"] if shot["kind"] == "breach"], expected)
+        self.assertGreater(len(attacks["shots"]), 5000)
 
     def test_only_documentation_addresses(self):
         text = json.dumps(self.snap)

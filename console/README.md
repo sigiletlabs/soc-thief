@@ -38,13 +38,17 @@ To make a snapshot from the Python side, see `docs/SNAPSHOT.md`.
 | Key | Action |
 | --- | --- |
 | `q` | quit |
-| `Tab`, `1`-`4` | switch view: overview, groups, health, history |
+| `Tab`, `1`-`5` | switch view: overview, groups, health, history, globe |
 | `j` / `k` or arrows | move |
 | `Enter` | open the selected group |
 | `Esc` | back, or clear the filters |
 | `/` | filter groups by text |
 | `c` | cycle the category filter |
 | `r` | reload the file now |
+| `Space` | globe: pause the replay |
+| `+` / `-` | globe: replay faster or slower |
+| `m` | globe: show or hide tuned shots |
+| `l` | globe: lock the view on home, or let it spin |
 
 In the web page, `1`-`4` switch views and `/` jumps to the filter.
 
@@ -57,6 +61,11 @@ In the web page, `1`-`4` switch views and `/` jumps to the filter.
   its tuning, and the model's advice. The model only advises. It cannot suppress a group.
 - **Health**: each check and its status.
 - **History**: earlier windows.
+- **Globe**: a rotating terminal globe, land in green and sea in blue, that replays the
+  window's attacks as arcs landing on home. Grey arcs were tuned out, amber were reported
+  and red are breach signals. The side panel counts each kind and lists the busiest source
+  countries in the last hour of replay. It needs the snapshot's optional `attacks` block,
+  which the demo has. See [Attacks](../docs/SNAPSHOT.md#attacks).
 
 ## Safety
 

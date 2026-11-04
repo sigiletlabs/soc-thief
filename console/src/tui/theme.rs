@@ -13,6 +13,8 @@ pub const AMBER: Color = Color::Rgb(0xf2, 0xcc, 0x60);
 pub const ORANGE: Color = Color::Rgb(0xe8, 0x89, 0x3a);
 pub const GREEN: Color = Color::Rgb(0x7e, 0xe7, 0x87);
 pub const RED: Color = Color::Rgb(0xff, 0x4d, 0x6d);
+/// The globe's sea; land uses GREEN.
+pub const SEA: Color = Color::Rgb(0x3b, 0x82, 0xc4);
 
 pub fn base() -> Style {
     Style::new().fg(TEXT).bg(BG)

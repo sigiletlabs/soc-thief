@@ -1,5 +1,6 @@
 //! Terminal dashboard. Reads only the snapshot file; draws only sanitised strings.
 
+mod globe;
 mod theme;
 
 use crate::snapshot::{Category, Group, Snapshot, Tuning, hour_of, short_time};
@@ -25,10 +26,17 @@ pub enum View {
     Groups,
     Health,
     History,
+    Globe,
 }
 
 impl View {
-    const ALL: [View; 4] = [View::Overview, View::Groups, View::Health, View::History];
+    const ALL: [View; 5] = [
+        View::Overview,
+        View::Groups,
+        View::Health,
+        View::History,
+        View::Globe,
+    ];
 
     fn index(self) -> usize {
         Self::ALL.iter().position(|v| *v == self).unwrap_or(0)
@@ -40,6 +48,7 @@ impl View {
             View::Groups => "2 GROUPS",
             View::Health => "3 HEALTH",
             View::History => "4 HISTORY",
+            View::Globe => "5 GLOBE",
         }
     }
 }
@@ -55,6 +64,9 @@ pub struct App {
     groups_state: TableState,
     health_state: TableState,
     history_state: TableState,
+    globe: Option<globe::Globe>,
+    globe_generation: u64,
+    started: Instant,
 }
 
 impl App {
@@ -70,6 +82,9 @@ impl App {
             groups_state: TableState::default().with_selected(0),
             health_state: TableState::default().with_selected(0),
             history_state: TableState::default().with_selected(0),
+            globe: None,
+            globe_generation: 0,
+            started: Instant::now(),
         }
     }
 
@@ -104,7 +119,7 @@ impl App {
             return 0;
         };
         match self.view {
-            View::Overview => 0,
+            View::Overview | View::Globe => 0,
             View::Groups => self.visible_groups().len(),
             View::Health => snap.health.checks.len(),
             View::History => snap.history.len(),
@@ -113,7 +128,7 @@ impl App {
 
     fn state_mut(&mut self) -> Option<&mut TableState> {
         match self.view {
-            View::Overview => None,
+            View::Overview | View::Globe => None,
             View::Groups => Some(&mut self.groups_state),
             View::Health => Some(&mut self.health_state),
             View::History => Some(&mut self.history_state),
@@ -181,11 +196,24 @@ impl App {
             self.clamp_selections();
             return;
         }
+        if self.view == View::Globe
+            && let Some(g) = self.globe.as_mut()
+        {
+            match key.code {
+                KeyCode::Char(' ') => return g.paused = !g.paused,
+                KeyCode::Char('+') | KeyCode::Char('=') => return g.faster(),
+                KeyCode::Char('-') => return g.slower(),
+                KeyCode::Char('m') => return g.show_tuned = !g.show_tuned,
+                KeyCode::Char('l') => return g.locked = !g.locked,
+                _ => {}
+            }
+        }
+        let views = View::ALL.len();
         match key.code {
             KeyCode::Char('q') => self.quit = true,
-            KeyCode::Tab => self.set_view(View::ALL[(self.view.index() + 1) % 4]),
-            KeyCode::BackTab => self.set_view(View::ALL[(self.view.index() + 3) % 4]),
-            KeyCode::Char(c @ '1'..='4') => {
+            KeyCode::Tab => self.set_view(View::ALL[(self.view.index() + 1) % views]),
+            KeyCode::BackTab => self.set_view(View::ALL[(self.view.index() + views - 1) % views]),
+            KeyCode::Char(c @ '1'..='5') => {
                 self.set_view(View::ALL[(c as u8 - b'1') as usize]);
             }
             KeyCode::Char('j') | KeyCode::Down => self.move_selection(1),
@@ -272,6 +300,7 @@ impl App {
                 View::Groups => self.render_groups(frame, body),
                 View::Health => self.render_health(frame, body),
                 View::History => self.render_history(frame, body),
+                View::Globe => self.render_globe(frame, body),
             }
         }
         self.render_footer(frame, footer);
@@ -889,12 +918,165 @@ impl App {
         frame.render_stateful_widget(table, area, &mut self.history_state);
     }
 
+    /// The pew pew globe. It replays `attacks` from the snapshot; it changes nothing.
+    fn render_globe(&mut self, frame: &mut Frame, area: Rect) {
+        let now = self.started.elapsed().as_secs_f64();
+        if self.globe.is_none() || self.globe_generation != self.source.generation() {
+            // A reloaded file restarts the replay but keeps the viewer's settings.
+            let keep = self
+                .globe
+                .as_ref()
+                .map(|g| (g.speed, g.show_tuned, g.locked));
+            self.globe = self.snapshot().and_then(|s| s.attacks.as_ref()).map(|a| {
+                let mut g = globe::Globe::new(a, 0.0);
+                if let Some(k) = keep {
+                    (g.speed, g.show_tuned, g.locked) = k;
+                }
+                g
+            });
+            self.globe_generation = self.source.generation();
+        }
+        let block = panel_block("pew pew");
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+        let Some(g) = self.globe.as_mut() else {
+            let text = vec![
+                Line::from(Span::styled("No attack data in this snapshot.", label())),
+                Line::from(Span::styled(
+                    "The demo has it. For a real window, run python -m soc_thief.attacks (docs/SNAPSHOT.md).",
+                    Style::new().fg(DIM),
+                )),
+            ];
+            frame.render_widget(Paragraph::new(text).wrap(Wrap { trim: true }), inner);
+            return;
+        };
+        g.advance(now);
+        let [main, side] = if inner.width >= 80 {
+            Layout::horizontal([Constraint::Fill(1), Constraint::Length(28)]).areas(inner)
+        } else {
+            [inner, Rect::default()]
+        };
+        let [map, ticker] =
+            Layout::vertical([Constraint::Fill(1), Constraint::Length(6)]).areas(main);
+        g.draw(map.width as usize, map.height as usize, now)
+            .render(map, frame.buffer_mut());
+
+        let ticker_block = panel_block("latest");
+        let rows = ticker_block.inner(ticker).height as usize;
+        let mut lines = Vec::new();
+        if let Some(text) = g.alarm_text(now) {
+            lines.push(Line::from(Span::styled(
+                format!(" BREACH  {text} "),
+                alarm(),
+            )));
+        }
+        let skip = g
+            .ticker
+            .len()
+            .saturating_sub(rows.saturating_sub(lines.len()));
+        for shot in g.ticker.iter().skip(skip) {
+            let t = shot.t as u64;
+            let country = if shot.country.is_empty() {
+                "--"
+            } else {
+                &shot.country
+            };
+            lines.push(Line::from(Span::styled(
+                format!(
+                    "+{:02}:{:02}:{:02}  lvl {:>2}  {:<3} {}",
+                    t / 3600,
+                    t / 60 % 60,
+                    t % 60,
+                    shot.level,
+                    country,
+                    shot.label
+                ),
+                Style::new().fg(globe::Layer::of(shot.kind).colour()),
+            )));
+        }
+        frame.render_widget(Paragraph::new(lines).block(ticker_block), ticker);
+
+        if side.width == 0 {
+            return;
+        }
+        let t = g.clock as u64;
+        let mut lines = vec![
+            Line::from(vec![
+                Span::styled("HOME ", label()),
+                Span::styled(
+                    if g.has_home() {
+                        g.home.clone()
+                    } else {
+                        "unknown".into()
+                    },
+                    title(),
+                ),
+                Span::styled(format!("  ×{}", g.speed), Style::new().fg(TEXT)),
+                Span::styled(if g.paused { "  PAUSED" } else { "" }, title()),
+            ]),
+            Line::from(Span::styled(
+                format!("replay +{:02}:{:02}:{:02}", t / 3600, t / 60 % 60, t % 60),
+                Style::new().fg(DIM),
+            )),
+            Line::default(),
+            Line::from(Span::styled("LAST HOUR BY SOURCE", label())),
+        ];
+        let top = g.top_countries(6);
+        let most = top.first().map_or(1, |(_, n)| *n).max(1);
+        let bar = (side.width as usize).saturating_sub(14).max(1);
+        for (code, n) in &top {
+            let len = ((*n * bar as u64) / most).max(1) as usize;
+            lines.push(Line::from(vec![
+                Span::styled(format!("{code:<4}"), Style::new().fg(TEXT)),
+                Span::styled(format!("{:<bar$}", "█".repeat(len)), Style::new().fg(AMBER)),
+                Span::styled(format!(" {:>6}", fmt_num(*n)), Style::new().fg(DIM)),
+            ]));
+        }
+        lines.push(Line::default());
+        let c = &g.counts;
+        for (name, n, style) in [
+            ("events", c.events, Style::new().fg(TEXT)),
+            ("tuned out", c.tuned, Style::new().fg(DIM)),
+            ("reported", c.reported, Style::new().fg(AMBER)),
+            ("breach", c.breach, Style::new().fg(RED)),
+            ("no source", g.no_source, Style::new().fg(DIM)),
+        ] {
+            lines.push(Line::from(vec![
+                Span::styled(format!("{:>9} ", fmt_num(n)), style),
+                Span::styled(name, Style::new().fg(DIM)),
+            ]));
+        }
+        if g.dropped > 0 {
+            lines.push(Line::from(Span::styled(
+                format!("{} shots over the cap", fmt_num(g.dropped)),
+                Style::new().fg(ORANGE),
+            )));
+        }
+        if !g.has_home() {
+            lines.push(Line::from(Span::styled(
+                "home country unknown: no arcs",
+                Style::new().fg(ORANGE),
+            )));
+        }
+        frame.render_widget(Paragraph::new(lines).block(panel_block("sources")), side);
+    }
+
     fn render_footer(&self, frame: &mut Frame, area: Rect) {
         let keys: &[(&str, &str)] = if self.editing_filter {
             &[
                 ("type", "filter"),
                 ("Enter/Esc", "done"),
                 ("Bksp", "delete"),
+            ]
+        } else if self.view == View::Globe {
+            &[
+                ("q", "quit"),
+                ("Tab/1-5", "view"),
+                ("Space", "pause"),
+                ("+/-", "speed"),
+                ("m", "tuned"),
+                ("l", "lock home"),
+                ("r", "reload"),
             ]
         } else if self.detail {
             &[
@@ -906,7 +1088,7 @@ impl App {
         } else {
             &[
                 ("q", "quit"),
-                ("Tab/1-4", "view"),
+                ("Tab/1-5", "view"),
                 ("j/k", "move"),
                 ("Enter", "detail"),
                 ("/", "filter"),
@@ -1023,7 +1205,11 @@ fn event_loop(terminal: &mut DefaultTerminal, mut app: App) -> std::io::Result<(
         terminal.draw(|f| app.render(f))?;
         let timeout = POLL_INTERVAL
             .saturating_sub(last_poll.elapsed())
-            .min(Duration::from_millis(250));
+            .min(Duration::from_millis(if app.view == View::Globe {
+                50
+            } else {
+                250
+            }));
         if event::poll(timeout)?
             && let Event::Key(key) = event::read()?
         {
@@ -1091,7 +1277,7 @@ mod tests {
     #[test]
     fn every_view_renders_without_leaking_escapes() {
         let mut app = App::new(SnapshotSource::new(fixture()));
-        for v in ['1', '2', '3', '4'] {
+        for v in ['1', '2', '3', '4', '5'] {
             app.handle_key(key(KeyCode::Char(v)));
             for (w, h) in [(140, 40), (60, 20), (20, 8)] {
                 assert_clean(&draw(&mut app, w, h));
@@ -1156,7 +1342,7 @@ mod tests {
     #[test]
     fn missing_file_shows_error_not_crash() {
         let mut app = App::new(SnapshotSource::new("/nonexistent/soc-thief/snapshot.json"));
-        for v in ['1', '2', '3', '4'] {
+        for v in ['1', '2', '3', '4', '5'] {
             app.handle_key(key(KeyCode::Char(v)));
             app.handle_key(key(KeyCode::Enter));
             app.handle_key(key(KeyCode::Char('j')));
@@ -1213,5 +1399,72 @@ mod tests {
         let screen = draw(&mut app, 120, 30);
         assert!(screen.contains("EARLIER WINDOWS"));
         assert!(screen.contains("2026-11-05 08:00"));
+    }
+
+    #[test]
+    fn globe_view_draws_the_globe_panel_and_keys() {
+        let mut app = App::new(SnapshotSource::new(fixture()));
+        app.handle_key(key(KeyCode::Char('5')));
+        let screen = draw(&mut app, 140, 40);
+        assert!(screen.contains("5 GLOBE"));
+        assert!(screen.contains("HOME AU"));
+        assert!(screen.contains("LAST HOUR BY SOURCE"));
+        assert!(screen.contains("Space"));
+        let braille = screen
+            .chars()
+            .filter(|c| ('\u{2801}'..='\u{28FF}').contains(c))
+            .count();
+        assert!(braille > 300, "only {braille} globe cells");
+        assert_clean(&screen);
+
+        let speed = app.globe.as_ref().unwrap().speed;
+        app.handle_key(key(KeyCode::Char('+')));
+        app.handle_key(key(KeyCode::Char(' ')));
+        app.handle_key(key(KeyCode::Char('m')));
+        app.handle_key(key(KeyCode::Char('l')));
+        let g = app.globe.as_ref().unwrap();
+        assert!(g.speed > speed && g.paused && !g.show_tuned && g.locked);
+        assert!(draw(&mut app, 140, 40).contains("PAUSED"));
+        // Globe keys do nothing elsewhere; 'q' still quits from the globe.
+        app.handle_key(key(KeyCode::Char('1')));
+        app.handle_key(key(KeyCode::Char('m')));
+        assert!(!app.globe.as_ref().unwrap().show_tuned);
+        app.handle_key(key(KeyCode::Char('5')));
+        app.handle_key(key(KeyCode::Char('q')));
+        assert!(app.quit);
+    }
+
+    #[test]
+    fn globe_without_attacks_says_how_to_get_them() {
+        let path =
+            std::env::temp_dir().join(format!("soc-thief-globe-{}.json", std::process::id()));
+        std::fs::write(
+            &path,
+            r#"{"schema": "soc-thief.snapshot/1", "source": "demo"}"#,
+        )
+        .unwrap();
+        let mut app = App::new(SnapshotSource::new(&path));
+        app.handle_key(key(KeyCode::Char('5')));
+        let screen = draw(&mut app, 100, 30);
+        std::fs::remove_file(&path).unwrap();
+        assert!(screen.contains("No attack data in this snapshot."));
+        assert_clean(&screen);
+    }
+
+    #[test]
+    fn tab_cycles_through_all_five_views() {
+        let mut app = App::new(SnapshotSource::new(fixture()));
+        for expected in [
+            View::Groups,
+            View::Health,
+            View::History,
+            View::Globe,
+            View::Overview,
+        ] {
+            app.handle_key(key(KeyCode::Tab));
+            assert_eq!(app.view, expected);
+        }
+        app.handle_key(key(KeyCode::BackTab));
+        assert_eq!(app.view, View::Globe);
     }
 }

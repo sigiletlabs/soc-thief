@@ -9,6 +9,8 @@ Python writes the snapshot:
   code over generated alerts. No network, no credentials.
 - `python -m soc_thief.snapshot --out snapshot.json` reads a real deployment's state
   read-only and writes what it can see.
+- `python -m soc_thief.attacks --snapshot snapshot.json --geoip FILE --home AU` adds the
+  globe view's attack shots to an existing snapshot. See [Attacks](#attacks) below.
 
 The console re-reads the file when it changes, so a timer that rewrites it gives a live view.
 
@@ -26,7 +28,7 @@ The console re-reads the file when it changes, so a timer that rewrites it gives
 
 ```json
 {
-  "schema": "soc-thief.snapshot/1",
+  "schema": "soc-thief.snapshot/1.1",
   "generated_at": "2026-11-07T08:00:04+11:00",
   "source": "demo",
   "timezone": "Australia/Sydney",
@@ -74,7 +76,18 @@ The console re-reads the file when it changes, so a timer that rewrites it gives
   "history": [
     {"start": "2026-11-05T08:00:00+11:00", "end": "2026-11-06T08:00:00+11:00",
      "events": 51022, "groups": 198, "delivered": true, "health_failure": false}
-  ]
+  ],
+  "attacks": {
+    "home": "AU",
+    "start": "2026-11-06T08:00:00+11:00",
+    "end": "2026-11-07T08:00:00+11:00",
+    "no_source": 31877,
+    "dropped": 0,
+    "shots": [
+      {"t": 3912.4, "country": "CN", "level": 5, "kind": "tuned", "label": "sshd: authentication failed."},
+      {"t": 71522.0, "country": "RU", "level": 12, "kind": "breach", "label": "brute force then success"}
+    ]
+  }
 }
 ```
 
@@ -107,3 +120,37 @@ The console re-reads the file when it changes, so a timer that rewrites it gives
   `recurring`, and `breaches` and `timeline` are empty. `history` and `health` are complete.
 - The rendered digest is not part of the snapshot. `python -m soc_thief.demo --digest-out FILE`
   writes it separately.
+
+## Attacks
+
+`attacks` is optional and was added in schema 1.1. The console's globe view (`5 GLOBE`)
+replays it as arcs flying from each source country to `home`. Without it, the view says how
+to get it.
+
+- `python -m soc_thief.demo` makes shots from a seeded generator, because the demo's
+  addresses are documentation ranges and have no country. The demo's breaches are added as
+  `breach` shots at their real times.
+- `python -m soc_thief.attacks` reads the snapshot's own window through the read-only
+  collector, with the same `WAZUH_INDEXER_*_FILE` settings as the runner, and looks up each
+  alert's `data.srcip` in an offline [DB-IP Lite](https://db-ip.com/db/lite.php) country CSV
+  (plain or `.gz`). It makes no other network request. `SOC_THIEF_TUNING_FILE`, if set, marks
+  tuned shots.
+
+Fields:
+
+- `home`: the two-letter ISO 3166-1 code the arcs land on.
+- `start` and `end`: the window the shots cover, the same as `window`.
+- `shots[].t`: seconds after `start`. Shots are oldest first.
+- `shots[].country`: a two-letter code, or `LAN` for an address that is not public (private,
+  loopback, link-local, carrier-grade NAT or documentation ranges).
+- `shots[].kind`: `tuned` (tuning matched), `reported` or `breach` (a breach signal, even if
+  tuned, as in policy). The console draws an unknown kind as `reported`.
+- `shots[].label`: the rule description, at most 48 characters, with addresses and secrets
+  masked.
+- `no_source`: alerts with no source address, or one the GeoIP file does not know. They are
+  counted, not listed.
+- `dropped`: shots over the cap of 20,000. Breach shots are kept first, then reported, then
+  tuned.
+
+A shot never carries an IP address, host name or agent name. Like the rest of the snapshot,
+the globe cannot change what is delivered.

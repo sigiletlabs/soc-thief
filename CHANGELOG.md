@@ -3,6 +3,14 @@
 Soc Thief is alpha software. Settings, file formats and command names may change between
 releases. Breaking changes are listed here.
 
+## Unreleased
+
+- Console: a globe view (`5 GLOBE`) that replays a window's attacks as arcs from each source
+  country to home, coloured by what policy did with them. Press `m` to hide what tuning muted.
+- Snapshot schema 1.1 adds an optional `attacks` block. The demo fills it, and
+  `python -m soc_thief.attacks` fills it from a real window using an offline DB-IP Lite
+  country file. Shots carry a country, never an address or host name.
+
 ## 0.1.0-alpha.1 (2026-11-03)
 
 First public release.

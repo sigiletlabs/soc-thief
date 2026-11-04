@@ -34,14 +34,14 @@ from datetime import datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from soc_thief import fastpath, runner, zone
+from soc_thief import attacks, fastpath, runner, zone
 from soc_thief.delivery import ReportItem, _category
 from soc_thief.model import ModelError, ModelReview
 from soc_thief.policy import Decision, preflight
 from soc_thief.state import StateStore
 from soc_thief.tuning import load_tuning
 
-SCHEMA = "soc-thief.snapshot/1"
+SCHEMA = "soc-thief.snapshot/1.1"
 STUB_MODEL = "demo-stub"
 BASELINE_DAYS = 30
 HISTORY_DAYS = 10
@@ -398,7 +398,7 @@ def build(*, seed: int = DEFAULT_SEED, now: datetime, workdir: Path | None = Non
 
     # The fast path's real page composition over the same groups, sent to a capturing pager.
     pages = fastpath._pages(groups_by_index, breach_index, key)
-    breaches = []
+    breaches, breach_times = [], []
     for (signal, agent_id), entry in sorted(pages.items(), key=lambda item: item[1]["first"]):
         page = fastpath._page(signal, agent_id, entry)
         try:
@@ -406,6 +406,8 @@ def build(*, seed: int = DEFAULT_SEED, now: datetime, workdir: Path | None = Non
             paged = True
         except Exception:
             paged = False
+        breach_times.append(((entry["first"] - start).total_seconds(),
+                             _SIGNAL_NAMES.get(signal, signal.replace("_", " "))))
         breaches.append({"name": _SIGNAL_NAMES.get(signal, signal.replace("_", " ")), "signals": [signal],
                          "agent": _NAMES.get(agent_id, agent_id), "at": _local(entry["first"], report_zone),
                          "paged": paged})
@@ -521,6 +523,11 @@ def build(*, seed: int = DEFAULT_SEED, now: datetime, workdir: Path | None = Non
         "breaches": breaches,
         "timeline": timeline,
         "history": history_rows,
+        # The globe's shots are generated, not derived from the alerts above: the demo's
+        # addresses are documentation ranges, which have no country. Its breaches are real.
+        "attacks": attacks.block(
+            attacks.demo_shots((end - start).total_seconds(), breach_times, seed=seed, rate=0.1),
+            home=attacks.DEMO_HOME, start=_local(start, report_zone), end=_local(end, report_zone)),
     }
     return snapshot, digest
 
